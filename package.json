@@ -1,6 +1,6 @@
 {
-  "name": "web3-provider",
-  "version": "1.0.0",
+  "name": "web3-signer-provider",
+  "version": "1.0.5",
   "description": "A provider in EIP1193",
   "main": "lib/index.js",
   "type": "lib/index.d.ts",
@@ -8,14 +8,33 @@
   "scripts": {
     "release": "tsc && npm publish && git tag $npm_package_version && git push --tag",
     "dev:tsc": "tsc -w -p tsconfig.json",
-    "link": "sudo npm link web3-provider"
+    "link": "sudo npm link web3-signer-provider"
+  },
+  "keywords": [
+    "wallet",
+    "walletconnect",
+    "ethereum",
+    "jsonrpc",
+    "mobile",
+    "qrcode",
+    "web3",
+    "crypto",
+    "cryptocurrency",
+    "dapp"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/web3w/web3-provider.git"
+  },
+  "bugs": {
+    "url": "https://github.com/web3w/web3-provider/issues"
   },
   "dependencies": {
+    "tslib": "^2.4.0",
+    "@ethersproject/providers": "^5.6.8",
     "@walletconnect/client": "^1.7.8",
-    "@walletconnect/qrcode-modal": "^1.7.8",
-    "@walletconnect/safe-json": "^1.0.0",
     "@walletconnect/types": "^1.7.8",
-    "@ethersproject/providers": "^5.6.8"
+    "web3-qrcode-modal": "^1.0.6"
   },
   "devDependencies": {
     "ts-node": "~10.7.0",

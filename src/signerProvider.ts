@@ -1,14 +1,13 @@
 import {EventEmitter} from 'events'
 import {JsonRpcProvider} from './wallet-connect-provider/jsonRpcProvider'
 import {HttpConnection} from './wallet-connect-provider/httpConnection'
-import {IEthereumProvider, ProviderAccounts, RequestArguments, WalletInfo} from './types'
+import {IEthereumProvider, ProviderAccounts, RequestArguments} from './types'
 import {SIGNING_METHODS} from "./utils/jsonrpc";
-import {CHAIN_CONFIG, CHAIN_NAME} from "./utils/chain";
+import {CHAIN_CONFIG, CHAIN_NAME, chainRpcMap} from "./utils/chain";
 import {arrayify, hexDataSlice, hexZeroPad, joinSignature, splitSignature} from "@ethersproject/bytes";
 import {_TypedDataEncoder as TypedDataEncoder} from "@ethersproject/hash";
 import {computePublicKey} from "@ethersproject/signing-key";
 import {keccak256} from "@ethersproject/keccak256";
-
 
 import {ec as EC} from "elliptic";
 
@@ -53,7 +52,7 @@ export function privateKeyToAddress(privateKey: string) {
 }
 
 export function privateKeysToAddress(privateKeys: string[]) {
-    if (!privateKeys || privateKeys.length == 0) throw new Error("Private keys undefind")
+    // if (!privateKeys || privateKeys.length == 0) throw new Error("Private keys undefind")
     let accounts = {}
     for (const val of privateKeys) {
         const address = privateKeyToAddress(val).toLowerCase();
@@ -92,7 +91,7 @@ export function getEIP712Hash(typeData: EIP712TypedData): string {
     return TypedDataEncoder.hash(typeData.domain, types, typeData.message)
 }
 
-export class SingerProvider implements IEthereumProvider {
+export class SignerProvider implements IEthereumProvider {
     public events: any = new EventEmitter()
     private http: JsonRpcProvider
     private accounts: string[]
@@ -100,14 +99,13 @@ export class SingerProvider implements IEthereumProvider {
     private rpcUrl: string
     private chainId = 1
 
-    constructor(wallet?: Partial<WalletInfo>) {
-        let {chainId, privateKeys} = wallet || {}
-        privateKeys = privateKeys || []
+    constructor({chainId, privateKeys}: { chainId?: number, privateKeys?: string[] }) {
         this.chainId = chainId || 1
-        this.rpcUrl = CHAIN_CONFIG[this.chainId].rpcs[0]
-        this.accountsPriKey = privateKeysToAddress(privateKeys)
+        this.rpcUrl = chainRpcMap()[this.chainId]
+        this.accountsPriKey = privateKeysToAddress(privateKeys || [])
         this.accounts = Object.keys(this.accountsPriKey)
-        this.http = new JsonRpcProvider(new HttpConnection(this.rpcUrl))
+        const httpConn = new HttpConnection(this.rpcUrl)
+        this.http = new JsonRpcProvider(httpConn)
     }
 
     public async request(args: RequestArguments): Promise<any> {
@@ -123,6 +121,15 @@ export class SingerProvider implements IEthereumProvider {
             default:
                 break
         }
+        //     "eth_sendTransaction",
+        //     "eth_signTransaction",
+        //     "eth_sign",
+        //     "eth_signTypedData",
+        //     "eth_signTypedData_v1",
+        //     "eth_signTypedData_v2",
+        //     "eth_signTypedData_v3",
+        //     "eth_signTypedData_v4",
+        //     "personal_sign",
         if (SIGNING_METHODS.some(val => val == method)) {
             // console.log("sendAsync.payload",args.method)
             let hash = ""
@@ -135,7 +142,18 @@ export class SingerProvider implements IEthereumProvider {
                 if (typeData.types.EIP712Domain) {
                     delete typeData.types.EIP712Domain
                 }
-                getEIP712Hash(typeData)
+                hash = getEIP712Hash(typeData)
+            } else if (method == "personal_sign") {
+                const account = <string>params?.[0]
+                privateKey = this.accountsPriKey[account.toLowerCase()]
+                hash = <string>params?.[1]
+
+            } else if (method == "eth_sendTransaction") {
+
+            } else if (method == "eth_signTransaction") {
+
+            } else if (method == "eth_sign") {
+
             }
             return ecSignHash(hash, privateKey)
         } else {
@@ -173,7 +191,8 @@ export class SingerProvider implements IEthereumProvider {
     private setHttpProvider(chainId: number): JsonRpcProvider | undefined {
         const rpcUrl = CHAIN_CONFIG[chainId].rpcs[0]
         if (typeof rpcUrl === 'undefined') return undefined
-        const http = new JsonRpcProvider(new HttpConnection(rpcUrl))
+        const httpConn = new HttpConnection(rpcUrl)
+        const http = new JsonRpcProvider(httpConn)
         return http
     }
 }

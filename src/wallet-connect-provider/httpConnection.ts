@@ -1,5 +1,5 @@
 import {EventEmitter} from 'events'
-import {safeJsonParse, safeJsonStringify} from '@walletconnect/safe-json'
+
 import {
     formatJsonRpcError,
     IJsonRpcConnection,
@@ -7,6 +7,7 @@ import {
     isHttpUrl,
     parseConnectionError
 } from '@walletconnect/jsonrpc-utils'
+import {safeJsonParse, safeJsonStringify} from "../utils/jsonrpc";
 
 const DEFAULT_HTTP_HEADERS = {
     Accept: 'application/json',

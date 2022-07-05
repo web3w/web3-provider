@@ -1,25 +1,31 @@
 import {EventEmitter} from 'events'
 import {JsonRpcProvider} from './jsonRpcProvider'
 import {HttpConnection} from './httpConnection'
-import {IConnector, IRpcConfig, IWCEthRpcConnectionOptions} from '@walletconnect/types'
+import {
+    IConnector,
+    IRPCMap,
+} from '@walletconnect/types'
 
-import {getRpcUrl} from '@walletconnect/utils'
-import {IEthereumProvider, ProviderAccounts, RequestArguments} from "../types";
+import {IEthereumProvider, ProviderAccounts, RequestArguments, WalletConnectProviderOptions} from "../types";
 import {SignerConnection} from './signerConnection'
 import {SIGNING_METHODS} from "../utils/jsonrpc";
+import {chainRpcMap} from "../utils/chain";
+
 
 // https://docs.walletconnect.com/quick-start/dapps/web3-provider
 export class WalletConnectProvider implements IEthereumProvider {
     public events: any = new EventEmitter();
-
-    private rpc: IRpcConfig;
+    private rpcs: IRPCMap;
     private signer: JsonRpcProvider;
     private http: JsonRpcProvider | undefined;
 
-    constructor(opts?: IWCEthRpcConnectionOptions) {
-        this.rpc = {infuraId: opts?.infuraId, custom: opts?.rpc};
-        this.signer = new JsonRpcProvider(new SignerConnection(opts));
-        const chainId = (this.signer.connection as SignerConnection).chainId || opts?.chainId || 1;
+    constructor(opts?: WalletConnectProviderOptions) {
+        const chainId = opts?.chainId || 1
+        const bridge = opts?.bridge || "https://bridge.walletconnect.org"
+        this.rpcs = opts?.rpcMap || chainRpcMap()
+
+        const signConn = new SignerConnection({...opts, bridge})
+        this.signer = new JsonRpcProvider(signConn);
         this.http = this.setHttpProvider(chainId);
         this.registerEventListeners();
     }
@@ -118,10 +124,10 @@ export class WalletConnectProvider implements IEthereumProvider {
     }
 
     private setHttpProvider(chainId: number): JsonRpcProvider | undefined {
-        const rpcUrl = getRpcUrl(chainId, this.rpc);
+        const rpcUrl = this.rpcs[chainId];
         if (typeof rpcUrl === "undefined") return undefined;
-        const http = new JsonRpcProvider(new HttpConnection(rpcUrl));
-        return http;
+        const httpConn = new HttpConnection(rpcUrl)
+        return new JsonRpcProvider(httpConn);
     }
 }
 

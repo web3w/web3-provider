@@ -1359,3 +1359,16 @@ export const CHAIN_CONFIG = {
         "websiteDead": true
     }
 }
+
+export function chainRpcMap(): { [chainId: number]: string } {
+    const rpcMap: { [chainId: number]: string } = {}
+    for (const chainId in CHAIN_CONFIG) {
+        const rpcUrl = CHAIN_CONFIG[chainId].rpcs[0]
+        if (rpcUrl && rpcUrl != "rpcWorking:false") {
+            rpcMap[chainId] = CHAIN_CONFIG[chainId].rpcs[0]
+        }
+    }
+    return rpcMap
+}
+
+// console.log(chainRpcMap())

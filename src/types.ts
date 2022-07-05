@@ -1,31 +1,28 @@
+import WalletConnectClient from "@walletconnect/client";
+import QRCodeModal from "web3-qrcode-modal";
+import {IClientMeta, IConnector, IQRCodeModalOptions, IRPCMap} from "@walletconnect/types";
 
-export interface RpcInfo {
-    url: string,
-    headers?: { [key: string]: string | number }
-    user?: string,
-    password?: string,
-    timeout?: number
+export type {JsonRpcError, JsonRpcResponse} from "@walletconnect/jsonrpc-types";
+export {formatJsonRpcError} from "@walletconnect/jsonrpc-utils";
+
+export type {IConnector}
+
+export interface BridgeOptions {
+    bridge: string;
+    connector?: IConnector;
+    qrcode?: boolean;
+    chainId?: number;
+    storageId?: string;
+    signingMethods?: string[];
+    qrcodeModalOptions?: IQRCodeModalOptions;
+    clientMeta?: IClientMeta;
+}
+ 
+export interface WalletConnectProviderOptions extends BridgeOptions {
+    rpcMap: IRPCMap;
 }
 
-export interface WalletInfo {
-    chainId: number
-    address: string
-    privateKeys?: string[]
-    rpcUrl?: RpcInfo
-    port?: number
-    cacheExpiration?: number
-    bridge?: string
-    offsetGasLimitRatio?: number
-    isSetGasPrice?: boolean
-}
-
-
-export interface LimitedCallSpec {
-    to: string
-    data: string
-    value?: string
-    from?: string
-}
+export {WalletConnectClient, QRCodeModal}
 
 export interface ProviderRpcError extends Error {
     message: string;
