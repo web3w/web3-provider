@@ -5,8 +5,7 @@ import {formatJsonRpcError} from "@walletconnect/jsonrpc-utils";
 import {
     IConnector,
     IJsonRpcResponseError,
-    IJsonRpcResponseSuccess,
-    IQRCodeModalOptions,
+    IJsonRpcResponseSuccess
 } from "@walletconnect/types";
 import {BridgeOptions} from "../types";
 
@@ -17,7 +16,6 @@ import {BridgeOptions} from "../types";
 //     desktopLinks?: string[];
 // }
 
-
 export class SignerConnection extends IJsonRpcConnection {
     public events: any = new EventEmitter();
 
@@ -27,7 +25,6 @@ export class SignerConnection extends IJsonRpcConnection {
     private pending = false;
     private wc: IConnector | undefined;
     private bridge: string;
-    private qrcode = true;
     private opts: BridgeOptions;
 
     constructor(opts: BridgeOptions) {
@@ -108,12 +105,11 @@ export class SignerConnection extends IJsonRpcConnection {
         if (this.wc) return this.wc;
         this.opts = opts || this.opts;
         this.bridge = opts?.connector ? opts.connector.bridge : opts.bridge
-
-        this.qrcode = typeof opts?.qrcode === "undefined" || opts?.qrcode !== false;
+        // this.qrcode = typeof opts?.qrcode === "undefined" || opts?.qrcode !== false;
         this.chainId = opts?.chainId || this.chainId;
         const connectorOpts = {
             bridge: this.bridge,
-            // qrcodeModal: this.qrcode,
+            qrcodeModal: opts?.qrcode,
             storageId: opts?.storageId,
             signingMethods: opts?.signingMethods,
             clientMeta: opts?.clientMeta,
@@ -180,6 +176,7 @@ export class SignerConnection extends IJsonRpcConnection {
         this.wc = this.register(this.opts);
 
         this.wc.on("connect", (err: Error | null) => {
+            // console.log("wc connect")
             if (err) {
                 this.events.emit("error", err);
                 return;

@@ -1,6 +1,3 @@
-//// const res = await fetch('https://api.belo.app/public/price');
-
-
 export async function fetchRPC(url: string, body: string) {
     const res = await fetch(url, {
             method: 'POST',

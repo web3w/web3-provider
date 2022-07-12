@@ -124,21 +124,16 @@ export class SignerProvider implements IEthereumProvider {
         //     "eth_sendTransaction",
         //     "eth_signTransaction",
         //     "eth_sign",
-        //     "eth_signTypedData",
-        //     "eth_signTypedData_v1",
-        //     "eth_signTypedData_v2",
-        //     "eth_signTypedData_v3",
-        //     "eth_signTypedData_v4",
         //     "personal_sign",
         if (SIGNING_METHODS.some(val => val == method)) {
             // console.log("sendAsync.payload",args.method)
             let hash = ""
             let privateKey = ""
             if (method.substring(0, 17) == "eth_signTypedData") {
-                const account = <string>params?.[0]
+                if (typeof params?.[0] !== "string" && typeof params?.[1] !== 'string') throw new Error('eth_signTypedData param must string')
+                const account = params?.[0]
                 privateKey = this.accountsPriKey[account.toLowerCase()]
-                // @ts-ignore
-                const typeData = JSON.parse(<string>params[1])
+                const typeData = JSON.parse(params?.[1])
                 if (typeData.types.EIP712Domain) {
                     delete typeData.types.EIP712Domain
                 }
@@ -147,7 +142,6 @@ export class SignerProvider implements IEthereumProvider {
                 const account = <string>params?.[0]
                 privateKey = this.accountsPriKey[account.toLowerCase()]
                 hash = <string>params?.[1]
-
             } else if (method == "eth_sendTransaction") {
 
             } else if (method == "eth_signTransaction") {

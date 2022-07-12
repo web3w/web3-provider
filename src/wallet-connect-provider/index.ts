@@ -50,6 +50,10 @@ export class WalletConnectProvider implements IEthereumProvider {
         return (this.http?.connection as HttpConnection).url || "";
     }
 
+    get uri(): string {
+        return this.connector.uri;
+    }
+
     public async request<T = unknown>(args: RequestArguments): Promise<T> {
         switch (args.method) {
             case "eth_requestAccounts":
@@ -76,6 +80,10 @@ export class WalletConnectProvider implements IEthereumProvider {
         return accounts as ProviderAccounts;
     }
 
+    public async createSession() {
+        await this.connector.createSession();
+    }
+
     public async connect(): Promise<void> {
         if (!this.signer.connection.connected) {
             await this.signer.connect();
@@ -89,7 +97,7 @@ export class WalletConnectProvider implements IEthereumProvider {
     }
 
     public on(event: any, listener: any): void {
-        this.events.on(event, listener);
+        this.connector.on(event, listener);
     }
 
     public once(event: string, listener: any): void {

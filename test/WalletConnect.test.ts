@@ -6,15 +6,15 @@ import WalletConnect from "@walletconnect/client";
     const account = "0x0A56b3317eD60dC4E1027A63ffbE9df6fb102401"
     const bridge = "https://bridge.walletconnect.org"
     // Create a connector
-    const connector1 = new WalletConnect({
+    const pageClient = new WalletConnect({
         bridge, // Required
     });
-    //
-    await connector1.createSession();
+    //createSession 生产 uri
+    await pageClient.createSession();
 
-    connector1.on("connect", (val, e) => {
+    pageClient.on("connect", (val, e) => {
         // console.log("connect1", val, e)
-        console.log("connect1", connector1.connected)
+        console.log("pageClient connect event", pageClient.connected)
 
         const message = "My email is john@doe.com - 1537836206101";
 
@@ -23,10 +23,9 @@ import WalletConnect from "@walletconnect/client";
             "0x0A56b3317eD60dC4E1027A63ffbE9df6fb102401"    // Required
         ];
 
-        connector1
-            .signMessage(msgParams)
+        // 发起一个 签名请求
+        pageClient.signMessage(msgParams)
             .then((result) => {
-
                 // Returns signature.
                 console.log(result)
             })
@@ -37,68 +36,67 @@ import WalletConnect from "@walletconnect/client";
 
     })
 
-    connector1.on("session_update", (val, e) => {
+    pageClient.on("session_update", (val, e) => {
         // console.log("session_update1", val, e)
-        console.log("session_update1", connector1.connected)
+        console.log("pageClient session_update event", pageClient.connected)
 
     })
 
-    connector1.on("disconnect", (val, e) => {
+    pageClient.on("disconnect", (val, e) => {
         // console.log("disconnect1", val, e)
-        console.log("disconnect1", connector1.connected)
+        console.log("pageClient disconnect event", pageClient.connected)
 
     })
     //
-    const connector2 = new WalletConnect({
+    const walletClient = new WalletConnect({
         bridge,
-        uri: connector1.uri
+        uri: pageClient.uri
     })
-    if (!connector2.connected) {
-        console.log("connector2:createSession")
-        await connector2.createSession();
-
-        connector2.on("session_request", (val, e) => {
-            console.log("connector2:session_request")
+    if (!walletClient.connected) {
+        console.log("1. walletClient:createSession")
+        await walletClient.createSession();
+        walletClient.on("session_request", (val, e) => {
+            console.log("2. walletClient:session_request")
             // console.log("session_request", val, e)
-            // console.log("session_request", connector2)
-            connector2.approveSession({chainId: 1, accounts: [account]});
+            // console.log("session_request", walletClient)
+            walletClient.approveSession({chainId: 1, accounts: [account]});
         })
 
-        connector2.on("session_update", (val, e) => {
-            console.log("connector2:session_update")
+        walletClient.on("session_update", (val, e) => {
+            console.log("walletClient:session_update")
             // console.log("session_request", val, e)
-            // console.log("session_request", connector2)
-            // connector2.approveSession({chainId: 1, accounts: [account]});
+            // console.log("session_request", walletClient)
+            // walletClient.approveSession({chainId: 1, accounts: [account]});
         })
 
-        connector2.on("call_request", function (n, e) {
-            console.log("EVENT", "call_request", "method", e.method)
-            console.log("EVENT", "call_request", "params", e.params)
-            connector2.approveRequest({
+        walletClient.on("call_request", function (n, e) {
+            console.log("walletClient", "call_request", "method", e.method)
+            console.log("walletClient", "call_request", "params", e.params)
+            walletClient.approveRequest({
                 id: 1,
                 jsonrpc: "20",
                 result: "0xlll"
             })
         })
 
-        connector2.on("connect", (val, e) => {
+        walletClient.on("connect", (val, e) => {
             // console.log("connect2", val)
             // console.log("connect2 event",e)
-            console.log("connect2", connector2.connected)
-            // connector2.killSession()
+            console.log("3. walletClient connect event", walletClient.connected)
+            // walletClient.killSession()
         })
 
-        connector2.on("disconnect", function (n, e) {
-            console.log("EVENT", "disconnect2")
+        walletClient.on("disconnect", function (n, e) {
+            console.log("walletClient disconnect event")
         })
-        // await connector2.createSession();
+        // await walletClient.createSession();
     }
 
 
     console.log("ACTION", "approveSession");
 
-    // if (connector2) {
-    //     connector2.approveSession({chainId: 1, accounts: ["0x0A56b3317eD60dC4E1027A63ffbE9df6fb102401"]});
+    // if (walletClient) {
+    //     walletClient.approveSession({chainId: 1, accounts: ["0x0A56b3317eD60dC4E1027A63ffbE9df6fb102401"]});
     // }
 
 })()

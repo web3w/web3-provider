@@ -106,7 +106,8 @@ export class HttpConnection implements IJsonRpcConnection {
         this.url = url
         this.registering = true
         try {
-            const body = safeJsonStringify({id: 1, jsonrpc: '2.0', method: 'test', params: []})
+            //net_listening
+            const body = safeJsonStringify({id: 1, jsonrpc: '2.0', method: 'web3_clientVersion', params: []})
             await fetch(url, {...DEFAULT_FETCH_OPTS, body})
             this.onOpen()
         } catch (e: any) {
