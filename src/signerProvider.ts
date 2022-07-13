@@ -1,15 +1,13 @@
 import {EventEmitter} from 'events'
-import {JsonRpcProvider} from './wallet-connect-provider/jsonRpcProvider'
-import {HttpConnection} from './wallet-connect-provider/httpConnection'
-import {IEthereumProvider, ProviderAccounts, RequestArguments} from './types'
-import {SIGNING_METHODS} from "./utils/jsonrpc";
+import {IEthereumProvider, ProviderAccounts, RequestArguments, RpcInfo, WalletInfo} from './types'
+import {SIGNING_METHODS} from "./utils/rpc";
 import {CHAIN_CONFIG, CHAIN_NAME, chainRpcMap} from "./utils/chain";
 import {arrayify, hexDataSlice, hexZeroPad, joinSignature, splitSignature} from "@ethersproject/bytes";
 import {_TypedDataEncoder as TypedDataEncoder} from "@ethersproject/hash";
 import {computePublicKey} from "@ethersproject/signing-key";
 import {keccak256} from "@ethersproject/keccak256";
-
 import {ec as EC} from "elliptic";
+import {fetchRPC} from "./utils/rpc";
 
 
 //TypedDataField
@@ -41,7 +39,6 @@ export interface EIP712TypedData {
     message: EIP712Message
     primaryType: string
 }
-
 
 export function privateKeyToAddress(privateKey: string) {
     privateKey = privateKey.substring(0, 2) == '0x' ? privateKey : '0x' + privateKey
@@ -93,23 +90,20 @@ export function getEIP712Hash(typeData: EIP712TypedData): string {
 
 export class SignerProvider implements IEthereumProvider {
     public events: any = new EventEmitter()
-    private http: JsonRpcProvider
     private accounts: string[]
     private accountsPriKey: { [key: string]: string }
-    private rpcUrl: string
+    private rpcInfo: RpcInfo
     private chainId = 1
 
-    constructor({chainId, privateKeys}: { chainId?: number, privateKeys?: string[] }) {
-        this.chainId = chainId || 1
-        this.rpcUrl = chainRpcMap()[this.chainId]
-        this.accountsPriKey = privateKeysToAddress(privateKeys || [])
+    constructor(wallet?: Partial<WalletInfo>) {
+        this.chainId = wallet?.chainId || 1
+        this.rpcInfo = wallet?.rpcUrl || {url: chainRpcMap()[this.chainId]}
+        this.accountsPriKey = privateKeysToAddress(wallet?.privateKeys || [])
         this.accounts = Object.keys(this.accountsPriKey)
-        const httpConn = new HttpConnection(this.rpcUrl)
-        this.http = new JsonRpcProvider(httpConn)
     }
 
     public async request(args: RequestArguments): Promise<any> {
-        console.log('request.payload', args.method)
+        // console.log('request.payload', args.method)
         const {params, method} = args
         switch (args.method) {
             case 'eth_requestAccounts':
@@ -134,9 +128,6 @@ export class SignerProvider implements IEthereumProvider {
                 const account = params?.[0]
                 privateKey = this.accountsPriKey[account.toLowerCase()]
                 const typeData = JSON.parse(params?.[1])
-                if (typeData.types.EIP712Domain) {
-                    delete typeData.types.EIP712Domain
-                }
                 hash = getEIP712Hash(typeData)
             } else if (method == "personal_sign") {
                 const account = <string>params?.[0]
@@ -151,10 +142,11 @@ export class SignerProvider implements IEthereumProvider {
             }
             return ecSignHash(hash, privateKey)
         } else {
-            if (typeof this.http === 'undefined') {
-                throw new Error(`Cannot request JSON-RPC method (${args.method}) without provided rpc url`)
-            }
-            return this.http.request(args)
+            // if (typeof this.http === 'undefined') {
+            //     throw new Error(`Cannot request JSON-RPC method (${args.method}) without provided rpc url`)
+            // }
+            const req = {...args, "jsonrpc": "2.0", "id": new Date().getTime()}
+            return fetchRPC(this.rpcInfo, JSON.stringify(req))
         }
     }
 
@@ -162,7 +154,6 @@ export class SignerProvider implements IEthereumProvider {
         const accounts = await this.request({method: 'eth_requestAccounts'})
         return accounts as ProviderAccounts
     }
-
 
     public on(event: any, listener: any): void {
         this.events.on(event, listener)
@@ -180,14 +171,5 @@ export class SignerProvider implements IEthereumProvider {
         this.events.off(event, listener)
     }
 
-    // ---------- Private ----------------------------------------------- //
-
-    private setHttpProvider(chainId: number): JsonRpcProvider | undefined {
-        const rpcUrl = CHAIN_CONFIG[chainId].rpcs[0]
-        if (typeof rpcUrl === 'undefined') return undefined
-        const httpConn = new HttpConnection(rpcUrl)
-        const http = new JsonRpcProvider(httpConn)
-        return http
-    }
 }
 

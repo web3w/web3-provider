@@ -1,13 +1,8 @@
 import React, {useState} from "react";
 import {createRoot} from "react-dom/client";
-import {createGlobalStyle} from "styled-components";
+import {Buffer} from "buffer";
+import {WalletApp} from "./WalletApp.tsx";
 
-import {NewApp} from "./New.tsx";
-import {globalStyle} from "./styles.ts";
-
-const GlobalStyle = createGlobalStyle`
-  ${globalStyle}
-`;
 declare global {
     interface Window {
         blockies: any;
@@ -15,12 +10,16 @@ declare global {
     }
 }
 
-const rootDiv = document.getElementById("root")!;
+window.Buffer = Buffer;
+
+const rootDiv = document.getElementById("root");
+if(!rootDiv){
+    throw new Error("root undefind")
+}
 const root = createRoot(rootDiv);
 
 root.render(
     <>
-        <GlobalStyle/>
-        <NewApp/>
+        <WalletApp/>
     </>,
 );

@@ -1,24 +1,18 @@
 import {EventEmitter} from 'events'
 import WalletConnect from "@walletconnect/client";
-import {IJsonRpcConnection, JsonRpcError, JsonRpcResponse} from "@walletconnect/jsonrpc-types";
-import {formatJsonRpcError} from "@walletconnect/jsonrpc-utils";
+// import {IJsonRpcConnection, JsonRpcResponse} from "@walletconnect/jsonrpc-types";
+
 import {
-    IConnector,
+    BridgeOptions, IConnector,
+    JsonRpcResponse,
+    JsonRpcError,
     IJsonRpcResponseError,
     IJsonRpcResponseSuccess
-} from "@walletconnect/types";
-import {BridgeOptions} from "../types";
+} from "../types";
+import {formatJsonRpcError} from "../utils/rpc";
 
-
-// export interface IQRCodeModalOptions {
-//     registryUrl?: string;
-//     mobileLinks?: string[];
-//     desktopLinks?: string[];
-// }
-
-export class SignerConnection extends IJsonRpcConnection {
+export class SignerConnection {
     public events: any = new EventEmitter();
-
     public accounts: string[] = [];
     public chainId = 1;
 
@@ -28,9 +22,9 @@ export class SignerConnection extends IJsonRpcConnection {
     private opts: BridgeOptions;
 
     constructor(opts: BridgeOptions) {
-        super();
+        // super();
         this.opts = opts;
-        this.bridge = opts.bridge
+        this.bridge = opts.bridge||""
         this.chainId = opts?.chainId || this.chainId;
         this.wc = this.register(opts);
     }
@@ -104,7 +98,7 @@ export class SignerConnection extends IJsonRpcConnection {
     private register(opts: BridgeOptions): IConnector {
         if (this.wc) return this.wc;
         this.opts = opts || this.opts;
-        this.bridge = opts?.connector ? opts.connector.bridge : opts.bridge
+        this.bridge = opts?.connector ? opts.connector.bridge : opts.bridge||""
         // this.qrcode = typeof opts?.qrcode === "undefined" || opts?.qrcode !== false;
         this.chainId = opts?.chainId || this.chainId;
         const connectorOpts = {

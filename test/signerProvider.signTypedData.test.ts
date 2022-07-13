@@ -42,7 +42,7 @@ const typedData = {
 const accounts = privateKeysToAddress(secrets.privateKeys)
 const account = privateKeyToAddress(secrets.privateKeys[0])
 
-const signer = new SignerProvider({chainId: 4, privateKeys: secrets.privateKeys})
+const signer = new SignerProvider({privateKeys: secrets.privateKeys})
 
 ;(async () => {
     const hash = "0xbe609aee343fb3c4b28e1df9e632fca64fcfaede20f02e86244efddf30957bd2"

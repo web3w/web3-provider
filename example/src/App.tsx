@@ -97,7 +97,6 @@ class App extends Component<any, any> {
 
     const walletSession: string | null = localStorage.getItem("walletconnect");
     if (typeof walletSession === "string") {
-
       const session: IWalletConnectSession = JSON.parse(walletSession);
       console.log("old connector walletConnectSession", session);
       // // console.log(session)

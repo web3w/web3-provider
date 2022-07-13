@@ -1,78 +1,77 @@
 import {EventEmitter} from 'events'
-import {JsonRpcProvider} from './jsonRpcProvider'
-import {HttpConnection} from './httpConnection'
+
 import {
-    IConnector,
-    IRPCMap,
-} from '@walletconnect/types'
-
-import {IEthereumProvider, ProviderAccounts, RequestArguments, WalletConnectProviderOptions} from "../types";
+    IEthereumProvider, ProviderAccounts, RequestArguments, IConnector,
+    IRPCMap, RpcInfo, WalletConnectProviderOptions
+} from "../types";
 import {SignerConnection} from './signerConnection'
-import {SIGNING_METHODS} from "../utils/jsonrpc";
+import {SIGNING_METHODS} from "../utils/rpc";
 import {chainRpcMap} from "../utils/chain";
-
+import {fetchRPC} from "../utils/rpc";
 
 // https://docs.walletconnect.com/quick-start/dapps/web3-provider
 export class WalletConnectProvider implements IEthereumProvider {
     public events: any = new EventEmitter();
     private rpcs: IRPCMap;
-    private signer: JsonRpcProvider;
-    private http: JsonRpcProvider | undefined;
+    private signer: SignerConnection;
+    private rpcInfo: RpcInfo
 
     constructor(opts?: WalletConnectProviderOptions) {
         const chainId = opts?.chainId || 1
         const bridge = opts?.bridge || "https://bridge.walletconnect.org"
         this.rpcs = opts?.rpcMap || chainRpcMap()
 
-        const signConn = new SignerConnection({...opts, bridge})
-        this.signer = new JsonRpcProvider(signConn);
-        this.http = this.setHttpProvider(chainId);
+        // const signConn =
+        this.signer = new SignerConnection({...opts, bridge})
+        this.rpcInfo = {url: this.rpcs[chainId]}
         this.registerEventListeners();
     }
 
     get connected(): boolean {
-        return (this.signer.connection as SignerConnection).connected;
+        return this.signer.connected;
     }
 
     get connector(): IConnector {
-        return (this.signer.connection as SignerConnection).connector;
+        return this.signer.connector;
     }
 
     get accounts(): string[] {
-        return (this.signer.connection as SignerConnection).accounts;
+        return this.signer.accounts;
     }
 
     get chainId(): number {
-        return (this.signer.connection as SignerConnection).chainId;
+        return this.signer.chainId;
     }
 
     get rpcUrl(): string {
-        return (this.http?.connection as HttpConnection).url || "";
+        return this.rpcInfo.url;
     }
 
     get uri(): string {
         return this.connector.uri;
     }
 
-    public async request<T = unknown>(args: RequestArguments): Promise<T> {
+    public async request(args: RequestArguments): Promise<any> {
         switch (args.method) {
             case "eth_requestAccounts":
                 await this.connect();
-                return (this.signer.connection as any).accounts;
+                return this.accounts;
             case "eth_accounts":
-                return (this.signer.connection as any).accounts;
+                return this.accounts;
             case "eth_chainId":
-                return (this.signer.connection as any).chainId;
+                return this.chainId;
             default:
                 break;
         }
         if (SIGNING_METHODS.some(val => val == args.method)) {
-            return this.signer.request(args);
+            return this.signer.send(args);
         }
-        if (typeof this.http === "undefined") {
-            throw new Error(`Cannot request JSON-RPC method (${args.method}) without provided rpc url`);
-        }
-        return this.http.request(args);
+        // if (typeof this.http === "undefined") {
+        //     throw new Error(`Cannot request JSON-RPC method (${args.method}) without provided rpc url`);
+        // }
+        const req = {...args, "jsonrpc": "2.0", "id": new Date().getTime()}
+        return fetchRPC(this.rpcInfo, JSON.stringify(req))
+        // return this.http.send(args);
     }
 
     public async enable(): Promise<ProviderAccounts> {
@@ -84,16 +83,25 @@ export class WalletConnectProvider implements IEthereumProvider {
         await this.connector.createSession();
     }
 
-    public async connect(): Promise<void> {
-        if (!this.signer.connection.connected) {
-            await this.signer.connect();
+    public async connect(): Promise<any> {
+        if (!this.signer.connected) {
+            await this.createSession()
+            // await this.signer.connect();
         }
+        return {
+            chainId: this.chainId,
+            accounts: this.accounts,
+        };
     }
 
     public async disconnect(): Promise<void> {
-        if (this.signer.connection.connected) {
-            await this.signer.disconnect();
+        if (this.signer.connected) {
+            // await this.signer.disconnect();
         }
+    }
+
+    public async killSession() {
+        return this.signer.connector.killSession()
     }
 
     public on(event: any, listener: any): void {
@@ -119,11 +127,11 @@ export class WalletConnectProvider implements IEthereumProvider {
     // ---------- Private ----------------------------------------------- //
 
     private registerEventListeners() {
-        this.signer.connection.on("accountsChanged", (accounts: string[]) => {
+        this.signer.on("accountsChanged", (accounts: string[]) => {
             this.events.emit("accountsChanged", accounts);
         });
-        this.signer.connection.on("chainChanged", (chainId: number) => {
-            this.http = this.setHttpProvider(chainId);
+        this.signer.on("chainChanged", (chainId: number) => {
+            this.rpcInfo = {url: this.rpcs[chainId]}
             this.events.emit("chainChanged", chainId);
         });
         this.signer.on("disconnect", () => {
@@ -131,11 +139,5 @@ export class WalletConnectProvider implements IEthereumProvider {
         });
     }
 
-    private setHttpProvider(chainId: number): JsonRpcProvider | undefined {
-        const rpcUrl = this.rpcs[chainId];
-        if (typeof rpcUrl === "undefined") return undefined;
-        const httpConn = new HttpConnection(rpcUrl)
-        return new JsonRpcProvider(httpConn);
-    }
 }
 

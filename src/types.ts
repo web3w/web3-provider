@@ -2,8 +2,6 @@
 // import QRCodeModal from "web3-qrcode-modal";
 import {IConnector} from "@walletconnect/types";
 
-export type {JsonRpcError, JsonRpcResponse} from "@walletconnect/jsonrpc-types";
-export {formatJsonRpcError} from "@walletconnect/jsonrpc-utils";
 
 export type {IConnector}
 
@@ -20,12 +18,11 @@ export interface IRPCMap {
 
 export interface IQRCodeModal {
     open(uri: string, cb: any, opts?: any): void;
-
     close(): void;
 }
 
 export interface BridgeOptions {
-    bridge: string;
+    bridge?: string;
     connector?: IConnector;
     qrcode?: IQRCodeModal;
     chainId?: number;
@@ -35,7 +32,7 @@ export interface BridgeOptions {
 }
 
 export interface WalletConnectProviderOptions extends BridgeOptions {
-    rpcMap: IRPCMap;
+    rpcMap?: IRPCMap;
 }
 
 // export {WalletConnectClient} //QRCodeModal
@@ -62,15 +59,11 @@ export interface RequestArguments {
 
 export type ProviderChainId = string;
 
-export interface ProviderConnectInfo {
-    readonly chainId: string
-}
+export type ProviderAccounts = string[];
 
-export type  ProviderAccounts = string[];
-
-export interface EIP1102Request extends RequestArguments {
-    method: "eth_requestAccounts";
-}
+// export interface EIP1102Request extends RequestArguments {
+//     method: "eth_requestAccounts";
+// }
 
 export interface SimpleEventEmitter {
     // add listener
@@ -125,13 +118,61 @@ export interface ChainConfig {
     rpcWorking?: boolean
 }
 
-export type JsonRpcId = string | number
-export type JsonRpcParams<T> = T[] | Record<string, T>
-
-export interface JsonRpcRequest<T> {
-    jsonrpc: '2.0'
-    id: JsonRpcId
-    method: string
-    params: JsonRpcParams<T>
+export interface RpcInfo {
+    url: string,
+    headers?: { [key: string]: string | number }
+    user?: string,
+    password?: string,
+    timeout?: number
 }
 
+export interface WalletInfo {
+    chainId: number
+    address: string
+    name?: string
+    privateKeys?: string[]
+    rpcUrl?: RpcInfo
+    port?: number
+    cacheExpiration?: number
+    bridge?: string
+    offsetGasLimitRatio?: number
+    isSetGasPrice?: boolean
+}
+
+
+export interface IJsonRpcResponseSuccess {
+    id: number;
+    jsonrpc: string;
+    result: any;
+}
+
+export interface IJsonRpcErrorMessage {
+    code?: number;
+    message: string;
+}
+
+export interface IJsonRpcResponseError {
+    id: number;
+    jsonrpc: string;
+    error: IJsonRpcErrorMessage;
+}
+
+export interface JsonRpcError {
+    id: number;
+    jsonrpc: string;
+    error: ErrorResponse;
+}
+
+export interface ErrorResponse {
+    code: number;
+    message: string;
+    data?: string;
+}
+
+export interface JsonRpcResult<T = any> {
+    id: number;
+    jsonrpc: string;
+    result: T;
+}
+
+export type JsonRpcResponse<T = any> = JsonRpcResult<T> | JsonRpcError;

@@ -3,14 +3,12 @@ import Wrapper from "./components/Wrapper";
 import Column from "./components/Column";
 import Button from "./components/Button";
 import { fonts } from "./styles";
-// import WalletConnectProvider from "@walletconnect/web3-provider";
 import { IAssetData } from "./helpers/types";
 import WalletConnect from "@walletconnect/client";
 
 const SLayout = styled.div`
   position: relative;
   width: 100%;
-  /* height: 100%; */
   min-height: 100vh;
   text-align: center;
 `;

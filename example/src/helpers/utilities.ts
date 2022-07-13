@@ -1,10 +1,10 @@
 import { providers } from "ethers";
 import { convertUtf8ToHex } from "@walletconnect/utils";
-import { TypedDataUtils } from "eth-sig-util";
 import * as ethUtil from "ethereumjs-util";
 import { IChainData } from "./types";
 import { SUPPORTED_CHAINS } from "./chains";
 import { eip1271 } from "./eip1271";
+import {getEIP712Hash} from "web3-wallets";
 
 export function capitalize(string: string): string {
   return string
@@ -143,14 +143,8 @@ export function hashPersonalMessage(msg: string): string {
 }
 
 export function encodeTypedDataMessage(msg: string): string {
-  const useV4 = true;
-  const data = TypedDataUtils.sanitizeData(JSON.parse(msg));
-  const buf = Buffer.concat([
-    Buffer.from("1901", "hex"),
-    TypedDataUtils.hashStruct("EIP712Domain", data.domain, data.types, useV4),
-    TypedDataUtils.hashStruct(data.primaryType as string, data.message, data.types, useV4),
-  ]);
-  return ethUtil.bufferToHex(buf);
+
+  return getEIP712Hash(JSON.parse(msg))
 }
 
 export function hashTypedDataMessage(msg: string): string {

@@ -1370,5 +1370,3 @@ export function chainRpcMap(): { [chainId: number]: string } {
     }
     return rpcMap
 }
-
-// console.log(chainRpcMap())
