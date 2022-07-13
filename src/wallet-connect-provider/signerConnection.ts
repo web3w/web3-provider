@@ -7,7 +7,7 @@ import {
     JsonRpcResponse,
     JsonRpcError,
     IJsonRpcResponseError,
-    IJsonRpcResponseSuccess
+    IJsonRpcResponseSuccess, IClientMeta, IQRCodeModal, IRPCMap
 } from "../types";
 import {formatJsonRpcError} from "../utils/rpc";
 
@@ -21,7 +21,7 @@ export class SignerConnection {
     private bridge: string;
     private opts: BridgeOptions;
 
-    constructor(opts: BridgeOptions) {
+    constructor(opts: { clientMeta?: IClientMeta; connector?: IConnector; chainId?: number; qrcode?: IQRCodeModal; rpcMap?: IRPCMap; signingMethods?: string[]; bridge: string; storageId?: string }) {
         // super();
         this.opts = opts;
         this.bridge = opts.bridge||""

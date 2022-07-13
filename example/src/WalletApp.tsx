@@ -42,24 +42,40 @@ import {
 import pkg from '../package.json'
 // import  from "antd/es/layout/layout";
 import {Layout} from "antd";
+import {WalletConnectProviderOptions} from "../../src/types";
 
 const {Content, Footer} = Layout
 
 export class WalletApp extends Component<any, any> {
     public state: IAppState = INITIAL_STATE;
 
+    public connect = async () => {
+        // bridge url
+        const bridge = "https://bridge.walletconnect.org";
+
+        // create new connector
+        const connector = new WalletConnect({ bridge, qrcodeModal: QRCodeModal });
+
+        await this.setState({ connector });
+
+        // check if already connected
+        if (!connector.connected) {
+            // create new session
+            await connector.createSession();
+        }
+
+        // subscribe to events
+        await this.subscribeToEvents();
+    };
+
     public walletConnectInit = async () => {
-        debugger
-        const connector = new WalletConnectProvider({chainId:4});
+        const options = {qrcode: QRCodeModal} as WalletConnectProviderOptions
 
-        debugger
-        console.log(connector.connected)
-        const {accounts, chainId} = await connector.connect();
+        const client = new WalletConnectProvider(options);
+        const {accounts, chainId} = await client.connect();
         console.log(accounts, chainId);
-
-        debugger
+        const connector = client.connector
         if (connector.connected) {
-            debugger
             await this.setState({connector});
             await this.setState({
                 chainId: connector.chainId,
@@ -67,7 +83,6 @@ export class WalletApp extends Component<any, any> {
                 address: connector.accounts[0],
             });
             await this.subscribeToEvents();
-
         } else {
             this.killSession();
         }
@@ -76,7 +91,6 @@ export class WalletApp extends Component<any, any> {
     public subscribeToEvents = () => {
         const {connector} = this.state;
 
-        debugger
         if (!connector) {
             return;
         }
@@ -85,16 +99,16 @@ export class WalletApp extends Component<any, any> {
             console.log(`connector.on("message")`);
         });
 
-        connector.on("session_update", async (error: any, payload: any) => {
-            console.log(`connector.on("session_update")`);
-
-            if (error) {
-                throw error;
-            }
-
-            const {chainId, accounts} = payload.params[0];
-            this.onSessionUpdate(accounts, chainId);
-        });
+        // connector.on("session_update", async (error: any, payload: any) => {
+        //     console.log(`connector.on("session_update")`);
+        //
+        //     if (error) {
+        //         throw error;
+        //     }
+        //
+        //     const {chainId, accounts} = payload.params[0];
+        //     this.onSessionUpdate(accounts, chainId);
+        // });
 
         connector.on("connect", (error: any, payload: any) => {
             debugger
@@ -136,6 +150,7 @@ export class WalletApp extends Component<any, any> {
         const {connector} = this.state;
         console.log("killSession for this state");
         if (connector) {
+            debugger
             connector.killSession();
         }
         this.resetApp();

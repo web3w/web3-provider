@@ -1,7 +1,7 @@
 import React, {useState} from "react";
 import {createRoot} from "react-dom/client";
 import {Buffer} from "buffer";
-import {WalletApp} from "./WalletApp.tsx";
+import {App} from "./App.tsx";
 
 declare global {
     interface Window {
@@ -20,6 +20,6 @@ const root = createRoot(rootDiv);
 
 root.render(
     <>
-        <WalletApp/>
+        <App/>
     </>,
 );

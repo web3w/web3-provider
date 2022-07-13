@@ -65,6 +65,17 @@ export const CHAIN_NAME = {
 };
 export const CHAIN_CONFIG = {
     "1": {
+        name: "Ethereum Mainnet",
+        short_name: "eth",
+        chain: "ETH",
+        network: "mainnet",
+        native_currency: {
+            symbol: "ETH",
+            name: "Ether",
+            decimals: "18",
+            contractAddress: "",
+            balance: "",
+        },
         "rpcs": [
             "https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
             "https://api.mycryptoapi.com/eth",
@@ -95,6 +106,9 @@ export const CHAIN_CONFIG = {
         ]
     },
     "4": {
+        name: "Ethereum Rinkby",
+        short_name: "eth",
+        chain: "ETH",
         "rpcs": [
             "https://rinkeby.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
             "https://api-test.element.market/api/v1/jsonrpc"
@@ -107,6 +121,7 @@ export const CHAIN_CONFIG = {
         ]
     },
     "56": {
+        name: "BSC Chain",
         "rpcs": [
             "https://bsc-dataseed.binance.org/",
             "https://bsc-dataseed1.defibit.io/",
@@ -130,6 +145,7 @@ export const CHAIN_CONFIG = {
         ]
     },
     "97": {
+        name: "BSC TEST Chain",
         "rpcs": [
             "https://data-seed-prebsc-1-s1.binance.org:8545",
             "https://api-test.element.market/api/bsc/jsonrpc"

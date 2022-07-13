@@ -80,6 +80,7 @@ interface IHeaderProps {
 
 const Header = (props: IHeaderProps) => {
     const {connected, address, chainId, killSession} = props;
+
     const activeChain = chainId ? getChainData(chainId).name : null;
     return (
         <SHeader {...props}>

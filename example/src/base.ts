@@ -142,7 +142,7 @@ export interface IAppState {
   assets: IAssetData[];
 }
 
-// export const bridge = "https://bridge.walletconnect.org";
+export const bridge = "https://bridge.walletconnect.org";
 // export const bridge = "https://bridge.element.market"
-export const bridge = "https://api.element.market/bridge/walletconnect"
+// export const bridge = "https://api.element.market/bridge/walletconnect"
 // export const bridge = "http://10.0.3.22:5001";

@@ -16,7 +16,7 @@ export class WalletConnectProvider implements IEthereumProvider {
     private signer: SignerConnection;
     private rpcInfo: RpcInfo
 
-    constructor(opts?: WalletConnectProviderOptions) {
+    constructor(opts: WalletConnectProviderOptions) {
         const chainId = opts?.chainId || 1
         const bridge = opts?.bridge || "https://bridge.walletconnect.org"
         this.rpcs = opts?.rpcMap || chainRpcMap()
@@ -47,9 +47,9 @@ export class WalletConnectProvider implements IEthereumProvider {
         return this.rpcInfo.url;
     }
 
-    get uri(): string {
-        return this.connector.uri;
-    }
+    // get uri(): string {
+    //     return this.connector.uri;
+    // }
 
     public async request(args: RequestArguments): Promise<any> {
         switch (args.method) {
@@ -79,13 +79,13 @@ export class WalletConnectProvider implements IEthereumProvider {
         return accounts as ProviderAccounts;
     }
 
-    public async createSession() {
-        await this.connector.createSession();
-    }
+    // public async createSession() {
+    //     await this.connector.createSession();
+    // }
 
     public async connect(): Promise<any> {
         if (!this.signer.connected) {
-            await this.createSession()
+            await this.connector.createSession();
             // await this.signer.connect();
         }
         return {
