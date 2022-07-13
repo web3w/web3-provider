@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.js": "/web3-provider/static/js/main.80d92a5c.js",
+    "static/media/walletconnect-banner.png": "/web3-provider/static/media/walletconnect-banner.7e6bf370c713eb0d587e.png",
+    "static/media/xdai.png": "/web3-provider/static/media/xdai.64224e1a279a4cb95c47.png",
+    "index.html": "/web3-provider/index.html",
+    "static/media/eth.svg": "/web3-provider/static/media/eth.42a0a168f663952de4abf588c58da29c.svg",
+    "main.80d92a5c.js.map": "/web3-provider/static/js/main.80d92a5c.js.map"
+  },
+  "entrypoints": [
+    "static/js/main.80d92a5c.js"
+  ]
+}
