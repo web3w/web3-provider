@@ -21,7 +21,7 @@ import Banner from "./components/Banner";
 import AccountAssets from "./components/AccountAssets";
 import {eip712} from "./helpers/eip712";
 import pkg from '../package.json'
-import {WalletConnectProvider, WalletConnectProviderOptions} from "web3-signer-provider";
+import {WalletProvider} from "web3-signer-provider";
 import {
     IAppState,
     INITIAL_STATE, SBalances,
@@ -57,7 +57,7 @@ export class App extends React.Component<any, any> {
         // create new connector
         // const connector = new WalletConnect({ bridge, qrcodeModal: QRCodeModal });
 
-        const client = new WalletConnectProvider({qrcode: QRCodeModal});
+        const client = new WalletProvider({qrcode: QRCodeModal, bridge});
         // // const {accounts, chainId} = await client.connect();
         // // console.log(accounts, chainId);
         const connector = client.connector
@@ -308,6 +308,8 @@ export class App extends React.Component<any, any> {
 
             // toggle pending request indicator
             this.setState({pendingRequest: true});
+
+            console.log(tx)
 
             // send transaction
             const result = await connector.signTransaction(tx);

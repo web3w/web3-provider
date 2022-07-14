@@ -10,8 +10,6 @@ import {
 import {fetchRPC, formatJsonRpcError, SIGNING_METHODS} from "./utils/rpc";
 import {chainRpcMap} from "./utils/chain";
 
-// import {JsonRpcPayload} from "web3-core-helpers";
-
 export class WalletProvider {
     public events: any = new EventEmitter();
     public accounts: string[] = [];
@@ -27,7 +25,7 @@ export class WalletProvider {
 
     constructor(opts: BridgeOptions, rpcMap?: IRPCMap) {
         this.opts = opts;
-        this.bridge = opts.bridge || "https://bridge.walletconnect.org"
+        this.bridge = opts?.bridge || "https://bridge.walletconnect.org"
         this.chainId = opts?.chainId || this.chainId;
         this.wc = this.register(opts);
         this.rpcs = rpcMap || chainRpcMap()
@@ -46,16 +44,30 @@ export class WalletProvider {
                 break;
         }
         if (SIGNING_METHODS.some(val => val == args.method)) {
-            return this.send(args);
+            this.sendSignature(args).then(res => {
+                return res
+            });
         }
         const req = {...args, "jsonrpc": "2.0", "id": new Date().getTime()}
         const res = await fetchRPC(this.rpcInfo, JSON.stringify(req))
         return res.result
     }
 
-    public async sendAsync(payload: JsonRpcPayload, callback: (error: Error | null, result?: JsonRpcResponse) => void) {
-        const result = await this.request(payload)
-        callback(null, result)
+    public sendAsync(
+        args: RequestArguments,
+        callback: (error: Error | null, response: any) => void
+    ): void {
+        this.request(args)
+            .then(response => callback(null, response))
+            .catch(error => callback(error, undefined));
+    }
+
+    public async sendSignature(payload: any) {
+        this.wc = this.register(this.opts);
+        if (!this.connected) await this.open();
+        this.sendPayload(payload)
+            .then((res: any) => this.events.emit("payload", res))
+            .catch(e => this.events.emit("payload", formatJsonRpcError(payload.id, e.message)));
     }
 
     public async enable(): Promise<ProviderAccounts> {
@@ -118,13 +130,6 @@ export class WalletProvider {
         this.onClose();
     }
 
-    public async send(payload: any) {
-        this.wc = this.register(this.opts);
-        if (!this.connected) await this.open();
-        this.sendPayload(payload)
-            .then((res: any) => this.events.emit("payload", res))
-            .catch(e => this.events.emit("payload", formatJsonRpcError(payload.id, e.message)));
-    }
 
     // ---------- Private ----------------------------------------------- //
 

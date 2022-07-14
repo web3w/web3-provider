@@ -1,8 +1,6 @@
 import {EventEmitter} from 'events'
 import {
     IEthereumProvider,
-    JsonRpcPayload,
-    JsonRpcResponse,
     ProviderAccounts,
     RequestArguments,
     RpcInfo,
@@ -15,16 +13,16 @@ import {
     hexDataSlice,
     hexZeroPad,
     joinSignature,
-    splitSignature,
-    hexlify,
-    isHexString
+    splitSignature
 } from "@ethersproject/bytes";
 import {_TypedDataEncoder as TypedDataEncoder, hashMessage} from "@ethersproject/hash";
 import {computePublicKey} from "@ethersproject/signing-key";
+import {Wallet} from "@ethersproject/wallet"
 import {keccak256} from "@ethersproject/keccak256";
+import {JsonRpcProvider} from "@ethersproject/providers"
 import {ec as EC} from "elliptic";
 import {fetchRPC} from "./utils/rpc";
-import {toUtf8String} from "@ethersproject/strings";
+import {ethers} from "ethers";
 
 
 export interface EIP712TypedDataField {
@@ -104,18 +102,36 @@ export function getEIP712Hash(typeData: EIP712TypedData): string {
     return TypedDataEncoder.hash(typeData.domain, types, typeData.message)
 }
 
+const allowedTransactionKeys: { [key: string]: boolean } = {
+    chainId: true, data: true, gasLimit: true, gasPrice: true, nonce: true, to: true, type: true, value: true
+}
+
+
 export class SignerProvider implements IEthereumProvider {
     public events: any = new EventEmitter()
-    private accounts: string[]
+    public accounts: string[]
+    public chainId = 1
     private accountsPriKey: { [key: string]: string }
     private rpcInfo: RpcInfo
-    private chainId = 1
+    public signer: Wallet;
 
     constructor(wallet?: Partial<WalletInfo>) {
         this.chainId = wallet?.chainId || 1
         this.rpcInfo = wallet?.rpcUrl || {url: chainRpcMap()[this.chainId]}
         this.accountsPriKey = privateKeysToAddress(wallet?.privateKeys || [])
         this.accounts = Object.keys(this.accountsPriKey)
+        const defaultPriKey = wallet?.address
+            ? this.accountsPriKey[wallet?.address]
+            : wallet?.privateKeys ? wallet?.privateKeys[0] : ""
+        this.signer = this.getWallet(defaultPriKey);
+    }
+
+    private getWallet(privateKey?: string) {
+        const wallet =
+            typeof privateKey !== "undefined"
+                ? new Wallet(privateKey)
+                : Wallet.createRandom();
+        return wallet.connect(new JsonRpcProvider(this.rpcInfo.url));
     }
 
     public async request(args: RequestArguments): Promise<any> {
@@ -145,16 +161,29 @@ export class SignerProvider implements IEthereumProvider {
                 privateKey = this.accountsPriKey[account.toLowerCase()]
                 const msg = <string>params?.[0]
                 hash = getHashMessage(msg)
-            } else if (method == "eth_sendTransaction") {
-
-            } else if (method == "eth_signTransaction") {
-
             } else if (method == "eth_sign") {
                 const account = <string>params?.[0]
                 privateKey = this.accountsPriKey[account.toLowerCase()]
                 const msg = <string>params?.[1]
                 hash = getHashMessage(msg)
+            } else if (method == "eth_sendTransaction") {
+                const tx = await this.signer.sendTransaction(this.parseTxParams(args));
+                await tx.wait();
+                return tx.hash;
+            } else if ("eth_signTransaction") {
+                const txParams = await this.signer.populateTransaction(this.parseTxParams(args));
+                const raw = await this.signer.signTransaction(txParams)
+                return {
+                    raw,
+                    tx: txParams
+                };
             }
+            // else if ("eth_sendRawTransaction") {
+            //     // @ts-ignore
+            //     const txRaw = <string>params?.[0]
+            //     const receipt = await this.signer.provider.sendTransaction(txRaw);
+            //     return receipt.hash;
+            // }
             return ecSignHash(hash, privateKey)
         } else {
             const req = {...args, "jsonrpc": "2.0", "id": new Date().getTime()}
@@ -163,9 +192,13 @@ export class SignerProvider implements IEthereumProvider {
         }
     }
 
-    public async sendAsync(payload: JsonRpcPayload, callback: (error: Error | null, result?: JsonRpcResponse) => void) {
-        const result = await this.request(payload)
-        callback(null, result)
+    public sendAsync(
+        args: RequestArguments,
+        callback: (error: Error | null, response: any) => void,
+    ): void {
+        this.request(args)
+            .then(response => callback(null, response))
+            .catch(error => callback(error, undefined));
     }
 
     public async enable(): Promise<ProviderAccounts> {
@@ -189,5 +222,25 @@ export class SignerProvider implements IEthereumProvider {
         this.events.off(event, listener)
     }
 
+    private parseTxParams = payload => {
+        let txParams: ethers.providers.TransactionRequest = {
+            from: payload.params[0].from,
+            data: payload.params[0].data,
+            chainId: this.chainId,
+        };
+        if (payload.params[0].gas) {
+            txParams = {
+                ...txParams,
+                gasLimit: payload.params[0].gas,
+            };
+        }
+        if (payload.params[0].to) {
+            txParams = {
+                ...txParams,
+                to: payload.params[0].to,
+            };
+        }
+        return txParams;
+    };
 }
 
