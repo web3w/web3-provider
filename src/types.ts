@@ -176,3 +176,10 @@ export interface JsonRpcResult<T = any> {
 }
 
 export type JsonRpcResponse<T = any> = JsonRpcResult<T> | JsonRpcError;
+
+export interface JsonRpcPayload {
+    jsonrpc?: string;
+    method: string;
+    params?: any[];
+    id?: string | number;
+}

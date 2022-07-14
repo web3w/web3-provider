@@ -2,10 +2,10 @@ import {providers} from "ethers";
 import {convertUtf8ToHex} from "@walletconnect/utils";
 import * as ethUtil from "ethereumjs-util";
 import {IChainData} from "./types";
-import {SUPPORTED_CHAINS} from "./chains";
+// import {SUPPORTED_CHAINS} from "./chains";
 import {eip1271} from "./eip1271";
-import {getEIP712Hash} from "web3-wallets";
-import {CHAIN_CONFIG} from "web3-signer-provider";
+// import {getEIP712Hash} from "web3-wallets";
+import {CHAIN_CONFIG,getEIP712Hash} from "web3-signer-provider";
 
 export function capitalize(string: string): string {
     return string

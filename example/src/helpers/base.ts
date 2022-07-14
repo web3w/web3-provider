@@ -1,9 +1,9 @@
 import styled from "styled-components";
-import Wrapper from "./components/Wrapper";
-import Column from "./components/Column";
-import Button from "./components/Button";
+import Wrapper from "../components/Wrapper";
+import Column from "../components/Column";
+import Button from "../components/Button";
 import { fonts } from "./styles";
-import { IAssetData } from "./helpers/types";
+import { IAssetData } from "./types";
 import WalletConnect from "@walletconnect/client";
 
 const SLayout = styled.div`

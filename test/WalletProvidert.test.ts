@@ -1,18 +1,24 @@
 // import {WalletConnectProvider} from "../src/wallet-connect-provider/index";
 import WalletConnect from "@walletconnect/client";
+import {WalletProvider} from "../src/walletProvider";
+import Web3 from "web3";
 
 ;(async () => {
 
     const account = "0x0A56b3317eD60dC4E1027A63ffbE9df6fb102401"
     const bridge = "https://bridge.walletconnect.org"
     // Create a connector
-    const pageClient = new WalletConnect({
+    const provider = new WalletProvider({
         bridge, // Required
     });
+
+    const pageClient = provider.connector
     //createSession 生产 uri
     await pageClient.createSession();
 
-    pageClient.on("connect", (val, e) => {
+    const test = new Web3(provider)
+
+    pageClient.on("connect", async (val, e) => {
         // console.log("connect1", val, e)
         console.log("pageClient connect event", pageClient.connected)
 
@@ -23,16 +29,21 @@ import WalletConnect from "@walletconnect/client";
             "0x0A56b3317eD60dC4E1027A63ffbE9df6fb102401"    // Required
         ];
 
+
+        // const num = await test.eth.getBlockNumber()
+        const s = await test.eth.sign("-------", account)
+
+        debugger
         // 发起一个 签名请求
-        pageClient.signMessage(msgParams)
-            .then((result) => {
-                // Returns signature.
-                console.log(result)
-            })
-            .catch(error => {
-                // Error returned when rejected
-                console.error(error);
-            })
+        // pageClient.signMessage(msgParams)
+        //     .then((result) => {
+        //         // Returns signature.
+        //         console.log(result)
+        //     })
+        //     .catch(error => {
+        //         // Error returned when rejected
+        //         console.error(error);
+        //     })
 
     })
 
@@ -100,7 +111,6 @@ import WalletConnect from "@walletconnect/client";
     // }
 
 })()
-
 
 
 //

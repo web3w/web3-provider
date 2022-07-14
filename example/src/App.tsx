@@ -1,5 +1,4 @@
 import * as React from "react";
-// import styled from "styled-components";
 // import WalletConnect from "@walletconnect/client";
 // import QRCodeModal from "@walletconnect/qrcode-modal";
 import QRCodeModal from "web3-qrcode-modal";
@@ -11,7 +10,6 @@ import Modal from "./components/Modal";
 import Header from "./components/Header";
 import Loader from "./components/Loader";
 
-// import {apiGetAccountAssets, apiGetGasPrices, apiGetAccountNonce} from "./helpers/api";
 import {
     sanitizeHex,
     verifySignature,
@@ -23,15 +21,12 @@ import Banner from "./components/Banner";
 import AccountAssets from "./components/AccountAssets";
 import {eip712} from "./helpers/eip712";
 import pkg from '../package.json'
-// import {WalletConnectProviderOptions} from "../../src/types";
-import {WalletConnectProvider} from "web3-signer-provider";
+import {WalletConnectProvider, WalletConnectProviderOptions} from "web3-signer-provider";
 import {
     IAppState,
     INITIAL_STATE, SBalances,
     SButtonContainer, SConnectButton,
-    SContent,
     SKey, SLanding,
-    SLayout,
     SModalContainer,
     SModalParagraph,
     SModalTitle,
@@ -42,8 +37,12 @@ import {
     SValue,
     SContainer,
     bridge,
-} from "./base";
-import {IAssetData} from "./helpers/types";
+} from "./helpers/base";
+
+import {Layout} from "antd";
+import {apiGetAccountAssets, apiGetAccountNonce, apiGetGasPrices} from "./helpers/api";
+
+const {Content, Footer} = Layout
 
 
 export class App extends React.Component<any, any> {
@@ -168,12 +167,12 @@ export class App extends React.Component<any, any> {
                 symbol: "WETH",
                 name: "WETH",
                 decimals: "18",
-                contractAddress: "string",
+                contractAddress: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
                 balance: "1"
             }
             // get account balances
-            const assets: IAssetData[] = [asset]
-            //await apiGetAccountAssets(address, chainId);
+            // const assets: IAssetData[] = [asset]
+            const assets = await apiGetAccountAssets(address, chainId);
 
             await this.setState({fetching: false, address, assets});
         } catch (error) {
@@ -198,12 +197,12 @@ export class App extends React.Component<any, any> {
         const to = address;
 
         // nonce
-        const _nonce = 1 //await apiGetAccountNonce(address, chainId);
+        const _nonce = await apiGetAccountNonce(address, chainId);
         const nonce = sanitizeHex(convertStringToHex(_nonce));
 
         // gasPrice
-        // const gasPrices = await apiGetGasPrices();
-        const _gasPrice =  20//gasPrices.slow.price;
+        const gasPrices = await apiGetGasPrices();
+        const _gasPrice = gasPrices.slow.price;
         const gasPrice = sanitizeHex(convertStringToHex(convertAmountToRawNumber(_gasPrice, 9)));
 
         // gasLimit
@@ -273,12 +272,12 @@ export class App extends React.Component<any, any> {
         const to = address;
 
         // nonce
-        const _nonce = 2 // await apiGetAccountNonce(address, chainId);
+        const _nonce = await apiGetAccountNonce(address, chainId);
         const nonce = sanitizeHex(convertStringToHex(_nonce));
 
         // gasPrice
-        // const gasPrices = await apiGetGasPrices();
-        const _gasPrice = 20//gasPrices.slow.price;
+        const gasPrices = await apiGetGasPrices();
+        const _gasPrice = gasPrices.slow.price;
         const gasPrice = sanitizeHex(convertStringToHex(convertAmountToRawNumber(_gasPrice, 9)));
 
         // gasLimit
@@ -546,7 +545,7 @@ export class App extends React.Component<any, any> {
             result,
         } = this.state;
         return (
-            <SLayout>
+            <Layout>
                 <Column maxWidth={1000} spanHeight>
                     <Header
                         connected={connected}
@@ -554,14 +553,13 @@ export class App extends React.Component<any, any> {
                         chainId={chainId}
                         killSession={this.killSession}
                     />
-                    <SContent>
+                    <Content>
                         {!address && !assets.length ? (
                             <SLanding center>
-                                <h3>
-                                    {`Try out WalletConnect`}
-                                    <br/>
-                                    <span>{`v${pkg.version}`}</span>
-                                </h3>
+                                <h1>
+                                    {`Try out WalletConnect v${pkg.version}`}
+
+                                </h1>
                                 <SButtonContainer>
                                     <SConnectButton left onClick={this.connect} fetching={fetching}>
                                         {"Connect to WalletConnect"}
@@ -606,7 +604,7 @@ export class App extends React.Component<any, any> {
                                 )}
                             </SBalances>
                         )}
-                    </SContent>
+                    </Content>
                 </Column>
                 <Modal show={showModal} toggleModal={this.toggleModal}>
                     {pendingRequest ? (
@@ -635,7 +633,7 @@ export class App extends React.Component<any, any> {
                         </SModalContainer>
                     )}
                 </Modal>
-            </SLayout>
+            </Layout>
         );
     };
 }

@@ -1,18 +1,20 @@
 import {ecSignHash, privateKeysToAddress, privateKeyToAddress, SignerProvider} from "../src/signerProvider";
 import secrets from '../../../secrets.json'
+import Web3 from "web3";
 
 const accounts = privateKeysToAddress(secrets.privateKeys)
 const account = privateKeyToAddress(secrets.privateKeys[0])
 
-const signer = new SignerProvider({chainId: 4})
+const signer = new SignerProvider({chainId: 4, privateKeys: secrets.privateKeys})
 
 ;(async () => {
-    const hash = "0xbe609aee343fb3c4b28e1df9e632fca64fcfaede20f02e86244efddf30957bd2"
-    const signHash0 = ecSignHash(hash, secrets.privateKeys[0])
-//     "eth_sign",
-    const typedDataStr = JSON.stringify(hash)
+    const hash = "hello"
+    const web3Test = new Web3(signer)
+    const sign = await web3Test.eth.sign(hash, account)
     const signHash = await signer.request({method: "eth_sign", params: [account, hash]})
-    console.assert(signHash0 == signHash, "eth_sign Hash:signHash")
+    console.assert(sign == signHash, "eth_sign Hash:signHash")
+
+    const blockNumber =await web3Test.eth.getBlockNumber()
 
 })()
 

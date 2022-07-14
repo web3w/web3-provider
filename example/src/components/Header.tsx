@@ -3,7 +3,7 @@ import styled from "styled-components";
 import * as PropTypes from "prop-types";
 import Banner from "./Banner";
 import {ellipseAddress, getChainData} from "../helpers/utilities";
-import {transitions} from "../styles";
+import {transitions} from "../helpers/styles";
 
 const SHeader = styled.div`
   margin-top: -1px;

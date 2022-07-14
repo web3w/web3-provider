@@ -1,16 +1,32 @@
 import {EventEmitter} from 'events'
-import {IEthereumProvider, ProviderAccounts, RequestArguments, RpcInfo, WalletInfo} from './types'
-import {SIGNING_METHODS} from "./utils/rpc";
+import {
+    IEthereumProvider,
+    JsonRpcPayload,
+    JsonRpcResponse,
+    ProviderAccounts,
+    RequestArguments,
+    RpcInfo,
+    WalletInfo
+} from './types'
+import {getHashMessage, SIGNING_METHODS} from "./utils/rpc";
 import {CHAIN_CONFIG, CHAIN_NAME, chainRpcMap} from "./utils/chain";
-import {arrayify, hexDataSlice, hexZeroPad, joinSignature, splitSignature} from "@ethersproject/bytes";
-import {_TypedDataEncoder as TypedDataEncoder} from "@ethersproject/hash";
+import {
+    arrayify,
+    hexDataSlice,
+    hexZeroPad,
+    joinSignature,
+    splitSignature,
+    hexlify,
+    isHexString
+} from "@ethersproject/bytes";
+import {_TypedDataEncoder as TypedDataEncoder, hashMessage} from "@ethersproject/hash";
 import {computePublicKey} from "@ethersproject/signing-key";
 import {keccak256} from "@ethersproject/keccak256";
 import {ec as EC} from "elliptic";
 import {fetchRPC} from "./utils/rpc";
+import {toUtf8String} from "@ethersproject/strings";
 
 
-//TypedDataField
 export interface EIP712TypedDataField {
     name: string;
     type: string;
@@ -115,12 +131,7 @@ export class SignerProvider implements IEthereumProvider {
             default:
                 break
         }
-        //     "eth_sendTransaction",
-        //     "eth_signTransaction",
-        //     "eth_sign",
-        //     "personal_sign",
         if (SIGNING_METHODS.some(val => val == method)) {
-            // console.log("sendAsync.payload",args.method)
             let hash = ""
             let privateKey = ""
             if (method.substring(0, 17) == "eth_signTypedData") {
@@ -130,24 +141,31 @@ export class SignerProvider implements IEthereumProvider {
                 const typeData = JSON.parse(params?.[1])
                 hash = getEIP712Hash(typeData)
             } else if (method == "personal_sign") {
-                const account = <string>params?.[0]
+                const account = <string>params?.[1]
                 privateKey = this.accountsPriKey[account.toLowerCase()]
-                hash = <string>params?.[1]
+                const msg = <string>params?.[0]
+                hash = getHashMessage(msg)
             } else if (method == "eth_sendTransaction") {
 
             } else if (method == "eth_signTransaction") {
 
             } else if (method == "eth_sign") {
-
+                const account = <string>params?.[0]
+                privateKey = this.accountsPriKey[account.toLowerCase()]
+                const msg = <string>params?.[1]
+                hash = getHashMessage(msg)
             }
             return ecSignHash(hash, privateKey)
         } else {
-            // if (typeof this.http === 'undefined') {
-            //     throw new Error(`Cannot request JSON-RPC method (${args.method}) without provided rpc url`)
-            // }
             const req = {...args, "jsonrpc": "2.0", "id": new Date().getTime()}
-            return fetchRPC(this.rpcInfo, JSON.stringify(req))
+            const res = await fetchRPC(this.rpcInfo, JSON.stringify(req))
+            return res.result
         }
+    }
+
+    public async sendAsync(payload: JsonRpcPayload, callback: (error: Error | null, result?: JsonRpcResponse) => void) {
+        const result = await this.request(payload)
+        callback(null, result)
     }
 
     public async enable(): Promise<ProviderAccounts> {

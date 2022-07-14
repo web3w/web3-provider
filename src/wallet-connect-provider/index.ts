@@ -47,10 +47,6 @@ export class WalletConnectProvider implements IEthereumProvider {
         return this.rpcInfo.url;
     }
 
-    // get uri(): string {
-    //     return this.connector.uri;
-    // }
-
     public async request(args: RequestArguments): Promise<any> {
         switch (args.method) {
             case "eth_requestAccounts":
@@ -70,8 +66,8 @@ export class WalletConnectProvider implements IEthereumProvider {
         //     throw new Error(`Cannot request JSON-RPC method (${args.method}) without provided rpc url`);
         // }
         const req = {...args, "jsonrpc": "2.0", "id": new Date().getTime()}
-        return fetchRPC(this.rpcInfo, JSON.stringify(req))
-        // return this.http.send(args);
+        const res = await fetchRPC(this.rpcInfo, JSON.stringify(req))
+        return res.result
     }
 
     public async enable(): Promise<ProviderAccounts> {

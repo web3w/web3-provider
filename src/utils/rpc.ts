@@ -1,5 +1,8 @@
 import {RpcInfo} from "../types";
 import {CHAIN_CONFIG} from "./chain";
+import {arrayify, isHexString} from "@ethersproject/bytes";
+import {toUtf8String} from "@ethersproject/strings";
+import {hashMessage} from "@ethersproject/hash";
 
 export const WALLET_METHODS = [
     "wallet_addEthereumChain",
@@ -105,4 +108,13 @@ export function formatErrorMessage(error, data?) {
         error.data = data;
     }
     return error;
+}
+
+export function getHashMessage(msg: string) {
+    if (isHexString(msg)) {
+        const utf8Str = toUtf8String(arrayify(msg))
+        return hashMessage(utf8Str)
+    } else {
+        return hashMessage(msg)
+    }
 }
