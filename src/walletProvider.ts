@@ -2,14 +2,11 @@ import {EventEmitter} from 'events'
 import WalletConnect from "@walletconnect/client";
 import {
     BridgeOptions, IConnector,
-    JsonRpcResponse,
     JsonRpcError,
-    IJsonRpcResponseError,
-    IJsonRpcResponseSuccess, IRPCMap, RpcInfo, RequestArguments, ProviderAccounts, JsonRpcPayload
+    IRPCMap, RpcInfo, RequestArguments, ProviderAccounts
 } from "./types";
-import {fetchRPC, formatJsonRpcError, getHashMessage, SIGNING_METHODS} from "./utils/rpc";
+import {fetchRPC, SIGNING_METHODS} from "./utils/rpc";
 import {chainRpcMap} from "./utils/chain";
-import {getEIP712Hash} from "./signerProvider";
 
 export class WalletProvider {
     public events: any = new EventEmitter();
@@ -77,8 +74,10 @@ export class WalletProvider {
                 if (typeof params?.[0] !== "string" && typeof params?.[1] !== 'string') throw new Error('eth_signTypedData param must string')
                 result = await this.wc?.signTypedData(params)
             } else if (method == "personal_sign") {
+                console.log("personal_sign", params)
                 result = await this.wc?.signPersonalMessage(params)
             } else if (method == "eth_sign") {
+                console.log("eth_sign", params)
                 result = await this.wc?.signMessage(params)
             } else if ("eth_signTransaction") {
                 result = await this.wc?.signTransaction(params)
@@ -112,6 +111,7 @@ export class WalletProvider {
     }
 
     public on(event: string, listener: any) {
+        console.log("WalletProvider on",event)
         this.events.on(event, listener);
     }
 
@@ -190,7 +190,8 @@ export class WalletProvider {
         if (wc) {
             this.wc = wc;
         }
-        this.events.emit("open");
+        console.log("On open")
+        this.events.emit("connect", this.wc);
     }
 
     private onClose() {
@@ -231,7 +232,7 @@ export class WalletProvider {
         this.wc = this.register(this.opts);
 
         this.wc.on("connect", (err: Error | null) => {
-            // console.log("wc connect")
+            console.log("wc connect")
             if (err) {
                 this.events.emit("error", err);
                 return;
@@ -239,10 +240,12 @@ export class WalletProvider {
             this.accounts = this.wc?.accounts || [];
             this.chainId = this.wc?.chainId || this.chainId;
 
+            this.events.emit("error", err);
             this.onOpen();
         });
 
         this.wc.on("disconnect", (err: Error | null) => {
+            console.log("wc disconnect")
             if (err) {
                 this.events.emit("error", err);
                 return;

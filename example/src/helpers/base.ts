@@ -2,8 +2,8 @@ import styled from "styled-components";
 import Wrapper from "../components/Wrapper";
 import Column from "../components/Column";
 import Button from "../components/Button";
-import { fonts } from "./styles";
-import { IAssetData } from "./types";
+import {fonts} from "./styles";
+import {IAssetData} from "./types";
 import WalletConnect from "@walletconnect/client";
 
 const SLayout = styled.div`
@@ -65,6 +65,7 @@ const SModalParagraph = styled.p`
 // @ts-ignore
 const SBalances = styled(SLanding as any)`
   height: 100%;
+
   & h3 {
     padding-top: 30px;
   }
@@ -110,36 +111,44 @@ const STestButton = styled(Button as any)`
 
 
 const INITIAL_STATE: IAppState = {
-  connector: null,
-  fetching: false,
-  connected: false,
-  chainId: 1,
-  showModal: false,
-  pendingRequest: false,
-  uri: "",
-  accounts: [],
-  address: "",
-  result: null,
-  assets: [],
+    connector: null,
+    fetching: false,
+    connected: false,
+    chainId: 1,
+    showModal: false,
+    pendingRequest: false,
+    uri: "",
+    accounts: [],
+    address: "",
+    result: null,
+    assets: [],
+    provider: null,
+    web3Signer: null,
+    ethersSigner: null
 };
 
-export {SLayout,SContent,SLanding,SButtonContainer,SConnectButton,SContainer,
-  STable,SModalContainer,SModalTitle,SModalParagraph,SBalances,
-  SRow,SKey,SValue,STestButtonContainer,STestButton,INITIAL_STATE}
+export {
+    SLayout, SContent, SLanding, SButtonContainer, SConnectButton, SContainer,
+    STable, SModalContainer, SModalTitle, SModalParagraph, SBalances,
+    SRow, SKey, SValue, STestButtonContainer, STestButton, INITIAL_STATE
+}
 
 
 export interface IAppState {
-  connector: WalletConnect | null;
-  fetching: boolean;
-  connected: boolean;
-  chainId: number;
-  showModal: boolean;
-  pendingRequest: boolean;
-  uri: string;
-  accounts: string[];
-  address: string;
-  result: any | null;
-  assets: IAssetData[];
+    connector: WalletConnect | null;
+    fetching: boolean;
+    connected: boolean;
+    chainId: number;
+    showModal: boolean;
+    pendingRequest: boolean;
+    uri: string;
+    accounts: string[];
+    address: string;
+    result: any | null;
+    assets: IAssetData[];
+    provider?: any,
+    web3Signer?: any
+    ethersSigner?: any
 }
 
 export const bridge = "https://bridge.walletconnect.org";
