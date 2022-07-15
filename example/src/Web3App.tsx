@@ -45,6 +45,7 @@ import {Buffer} from "buffer";
 const {Content, Footer} = Layout
 
 window.Buffer = Buffer;
+
 export class Web3App extends React.Component<any, any> {
     public state: IAppState = {
         ...INITIAL_STATE,
@@ -52,10 +53,10 @@ export class Web3App extends React.Component<any, any> {
 
     public connect = async () => {
 
-        const provider = new WalletProvider({qrcode: QRCodeModal, bridge});
+        const provider = new WalletProvider({qrcodeModal: QRCodeModal, bridge});
         const connector = provider.connector
         const web3Signer = new Web3(provider)
-        await this.setState({connector,web3Signer});
+        await this.setState({connector, web3Signer});
 
         // check if already connected
         if (!connector.connected) {

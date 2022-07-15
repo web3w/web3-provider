@@ -24,7 +24,7 @@ export interface IQRCodeModal {
 export interface BridgeOptions {
     bridge?: string;
     connector?: IConnector;
-    qrcode?: IQRCodeModal;
+    qrcodeModal?: IQRCodeModal;
     chainId?: number;
     storageId?: string;
     signingMethods?: string[];

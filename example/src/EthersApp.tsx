@@ -52,7 +52,7 @@ export class EthersApp extends React.Component<any, any> {
     };
 
     public connect = async () => {
-        const provider = new WalletProvider({qrcode: QRCodeModal, bridge});
+        const provider = new WalletProvider({qrcodeModal: QRCodeModal, bridge});
         const ethersSigner = new ethers.providers.Web3Provider(provider).getSigner()
         await this.setState({provider, ethersSigner});
 

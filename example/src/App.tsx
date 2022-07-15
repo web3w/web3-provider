@@ -57,7 +57,7 @@ export class App extends React.Component<any, any> {
         // create new connector
         // const connector = new WalletConnect({ bridge, qrcodeModal: QRCodeModal });
 
-        const client = new WalletProvider({qrcode: QRCodeModal, bridge});
+        const client = new WalletProvider({qrcodeModal: QRCodeModal, bridge});
         // // const {accounts, chainId} = await client.connect();
         // // console.log(accounts, chainId);
         const connector = client.connector

@@ -164,7 +164,7 @@ export class WalletProvider {
         this.chainId = opts?.chainId || this.chainId;
         const connectorOpts = {
             bridge: this.bridge,
-            qrcodeModal: opts?.qrcode,
+            qrcodeModal: opts?.qrcodeModal,
             storageId: opts?.storageId,
             signingMethods: opts?.signingMethods,
             clientMeta: opts?.clientMeta,

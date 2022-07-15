@@ -6,7 +6,7 @@ https://web3w.github.io/web3-provider/
 ### connect
 ```ts
     public connect = async () => { 
-        const provider = new WalletProvider({qrcode: QRCodeModal, bridge});
+        const provider = new WalletProvider({qrcodeModal: QRCodeModal, bridge});
         const ethersSigner = new ethers.providers.Web3Provider(provider).getSigner()
        
         if (!provider.connected) { 
@@ -74,7 +74,7 @@ https://web3w.github.io/web3-provider/
 ### connect
 ```ts
 public connect = async () => {
-    const provider = new WalletProvider({qrcode: QRCodeModal, bridge});
+    const provider = new WalletProvider({qrcodeModal: QRCodeModal, bridge});
     const web3Signer = new Web3(provider)
 
     if (!provider.connected) {
