@@ -111,7 +111,7 @@ export class WalletProvider {
     }
 
     public on(event: string, listener: any) {
-        console.log("WalletProvider on",event)
+        console.log("WalletProvider on", event)
         this.events.on(event, listener);
     }
 
@@ -238,6 +238,7 @@ export class WalletProvider {
             }
             this.accounts = this.wc?.accounts || [];
             this.chainId = this.wc?.chainId || this.chainId;
+            this.events.emit("connect", {chainId: this.chainId, accounts: this.accounts, peerMeta: this.wc?.peerMeta})
             this.onOpen();
         });
 
@@ -247,7 +248,7 @@ export class WalletProvider {
                 this.events.emit("error", err);
                 return;
             }
-
+            this.events.emit("disconnect")
             this.onClose();
         });
 
