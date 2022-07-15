@@ -190,8 +190,7 @@ export class WalletProvider {
         if (wc) {
             this.wc = wc;
         }
-        console.log("On open")
-        this.events.emit("connect", this.wc);
+        this.events.emit("open");
     }
 
     private onClose() {
@@ -239,8 +238,6 @@ export class WalletProvider {
             }
             this.accounts = this.wc?.accounts || [];
             this.chainId = this.wc?.chainId || this.chainId;
-
-            this.events.emit("error", err);
             this.onOpen();
         });
 
@@ -255,10 +252,12 @@ export class WalletProvider {
         });
 
         this.wc.on("modal_closed", () => {
+            console.log("wc modal_closed")
             this.events.emit("error", new Error("User closed modal"));
         });
 
         this.wc.on("session_update", (error, payload) => {
+            console.log("wc session_update")
             const {accounts, chainId} = payload.params[0];
             if (!this.accounts || (accounts && this.accounts !== accounts)) {
                 this.accounts = accounts;
