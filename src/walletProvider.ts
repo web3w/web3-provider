@@ -7,8 +7,9 @@ import {
     IJsonRpcResponseError,
     IJsonRpcResponseSuccess, IRPCMap, RpcInfo, RequestArguments, ProviderAccounts, JsonRpcPayload
 } from "./types";
-import {fetchRPC, formatJsonRpcError, SIGNING_METHODS} from "./utils/rpc";
+import {fetchRPC, formatJsonRpcError, getHashMessage, SIGNING_METHODS} from "./utils/rpc";
 import {chainRpcMap} from "./utils/chain";
+import {getEIP712Hash} from "./signerProvider";
 
 export class WalletProvider {
     public events: any = new EventEmitter();
@@ -44,30 +45,52 @@ export class WalletProvider {
                 break;
         }
         if (SIGNING_METHODS.some(val => val == args.method)) {
-            this.sendSignature(args).then(res => {
-                return res
-            });
+            return this.send(args)
+        } else {
+            const req = {...args, "jsonrpc": "2.0", "id": new Date().getTime()}
+            const res = await fetchRPC(this.rpcInfo, JSON.stringify(req))
+            if (res.result) {
+                return res.result
+            } else {
+                throw  res.error
+            }
         }
-        const req = {...args, "jsonrpc": "2.0", "id": new Date().getTime()}
-        const res = await fetchRPC(this.rpcInfo, JSON.stringify(req))
-        return res.result
     }
 
-    public sendAsync(
+    public sendAsync<T = unknown>(
         args: RequestArguments,
         callback: (error: Error | null, response: any) => void
     ): void {
         this.request(args)
             .then(response => callback(null, response))
-            .catch(error => callback(error, undefined));
+            .catch(error => callback(error, null));
     }
 
-    public async sendSignature(payload: any) {
+    public send(args: any) {
         this.wc = this.register(this.opts);
-        if (!this.connected) await this.open();
-        this.sendPayload(payload)
-            .then((res: any) => this.events.emit("payload", res))
-            .catch(e => this.events.emit("payload", formatJsonRpcError(payload.id, e.message)));
+        return new Promise(async (resolve, reject) => {
+            if (!this.connected) await this.open();
+            if (!this.wc) reject("Wallet connect undefined")
+            let result
+            const {method, params} = args
+            if (method.substring(0, 17) == "eth_signTypedData") {
+                if (typeof params?.[0] !== "string" && typeof params?.[1] !== 'string') throw new Error('eth_signTypedData param must string')
+                result = await this.wc?.signTypedData(params)
+            } else if (method == "personal_sign") {
+                result = await this.wc?.signPersonalMessage(params)
+            } else if (method == "eth_sign") {
+                result = await this.wc?.signMessage(params)
+            } else if ("eth_signTransaction") {
+                result = await this.wc?.signTransaction(params)
+            } else if (method == "eth_sendTransaction") {
+                result = await this.wc?.sendTransaction(params)
+            } else {
+                reject(args)
+            }
+
+            resolve(result)
+
+        })
     }
 
     public async enable(): Promise<ProviderAccounts> {
@@ -245,23 +268,23 @@ export class WalletProvider {
         });
     }
 
-    private async sendPayload(payload: any): Promise<JsonRpcResponse> {
-        this.wc = this.register(this.opts);
-        try {
-            const response = await this.wc.unsafeSend(payload);
-            return this.sanitizeResponse(response);
-        } catch (error) {
-            return this.onError(payload, (error as any).message);
-        }
-    }
+    // private async sendPayload(payload: any): Promise<JsonRpcResponse> {
+    //     this.wc = this.register(this.opts);
+    //     try {
+    //         const response = await this.wc.unsafeSend(payload);
+    //         return this.sanitizeResponse(response);
+    //     } catch (error) {
+    //         return this.onError(payload, (error as any).message);
+    //     }
+    // }
 
-    private sanitizeResponse(
-        response: IJsonRpcResponseSuccess | IJsonRpcResponseError,
-    ): JsonRpcResponse {
-        return typeof (response as IJsonRpcResponseError).error !== "undefined" &&
-        typeof (response as IJsonRpcResponseError).error.code === "undefined"
-            ? formatJsonRpcError(response.id, (response as IJsonRpcResponseError).error.message)
-            : (response as JsonRpcResponse);
-    }
+    // private sanitizeResponse(
+    //     response: IJsonRpcResponseSuccess | IJsonRpcResponseError,
+    // ): JsonRpcResponse {
+    //     return typeof (response as IJsonRpcResponseError).error !== "undefined" &&
+    //     typeof (response as IJsonRpcResponseError).error.code === "undefined"
+    //         ? formatJsonRpcError(response.id, (response as IJsonRpcResponseError).error.message)
+    //         : (response as JsonRpcResponse);
+    // }
 }
 

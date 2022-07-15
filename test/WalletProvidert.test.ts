@@ -73,6 +73,17 @@ const tx = {
         //         console.error(error);
         //     })
 
+        const web3Test = new Web3(provider)
+        web3Test.eth.sign(message, account).then(result=>{
+            console.log("2.4 web3Test  signature", result)
+        })
+
+        const ethSigner = new ethers.providers.Web3Provider(provider).getSigner()
+        ethSigner.signMessage(message).then(result => {
+            console.log("2.4 ethSigner signMessage", result)
+        })
+
+
         // pageClient.signTransaction(tx)
         //     .then((result) => {
         //         console.log("2.4 PageClient receive tx signature", result)
@@ -81,12 +92,12 @@ const tx = {
         //         console.error(error);
         //     })
 
-        const ethersTest = new ethers.providers.Web3Provider(provider)
-        const ethSigner = ethersTest.getSigner()
-        const txx = await ethSigner.populateTransaction(tx)
-        ethSigner.sendTransaction(txx).then(result => {
-            console.log("2.4 PageClient receive tx signature", result)
-        })
+        // const ethSigner = new ethers.providers.Web3Provider(provider).getSigner()
+        //
+        // // const txx = await ethSigner.populateTransaction(tx)
+        // ethSigner.sendTransaction(tx).then(result => {
+        //     console.log("2.4 PageClient receive tx signature", result)
+        // })
 
         // console.log(txxx)
 
