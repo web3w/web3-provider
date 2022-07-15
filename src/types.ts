@@ -2,7 +2,6 @@
 // import QRCodeModal from "web3-qrcode-modal";
 import {IConnector} from "@walletconnect/types";
 
-
 export type {IConnector}
 
 export interface IClientMeta {
@@ -18,6 +17,7 @@ export interface IRPCMap {
 
 export interface IQRCodeModal {
     open(uri: string, cb: any, opts?: any): void;
+
     close(): void;
 }
 
@@ -30,12 +30,6 @@ export interface BridgeOptions {
     signingMethods?: string[];
     clientMeta?: IClientMeta;
 }
-
-export interface WalletConnectProviderOptions extends BridgeOptions {
-    rpcMap?: IRPCMap;
-}
-
-// export {WalletConnectClient} //QRCodeModal
 
 export interface ProviderRpcError extends Error {
     message: string;

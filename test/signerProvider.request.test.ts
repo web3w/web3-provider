@@ -2,9 +2,14 @@ import {ecSignHash, privateKeysToAddress, privateKeyToAddress, SignerProvider} f
 import secrets from '../../../secrets.json'
 import Web3 from "web3";
 import { ethers } from "ethers";
+import {Wallet} from "@ethersproject/wallet"
 
 const accounts = privateKeysToAddress(secrets.privateKeys)
 const account = privateKeyToAddress(secrets.privateKeys[0])
+
+const ww = ethers.Wallet.createRandom()
+
+console.log(ww.privateKey)
 
 const signer = new SignerProvider({chainId: 4})
 

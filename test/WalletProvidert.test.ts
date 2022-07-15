@@ -45,6 +45,8 @@ const tx = {
         bridge, // Requireda
     });
 
+    // new WalletProvider({bridge, chainId});
+
 
     const pageClient = provider.connector
     //createSession 生产 uri

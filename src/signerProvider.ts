@@ -120,9 +120,12 @@ export class SignerProvider implements IEthereumProvider {
         this.rpcInfo = wallet?.rpcUrl || {url: chainRpcMap()[this.chainId]}
         this.accountsPriKey = privateKeysToAddress(wallet?.privateKeys || [])
         this.accounts = Object.keys(this.accountsPriKey)
+        // const ll = Wallet.createRandom().privateKey
         const defaultPriKey = wallet?.address
             ? this.accountsPriKey[wallet?.address]
-            : wallet?.privateKeys ? wallet?.privateKeys[0] : ""
+            : wallet?.privateKeys
+                ? wallet?.privateKeys[0]
+                : undefined
         this.signer = this.getWallet(defaultPriKey);
     }
 
