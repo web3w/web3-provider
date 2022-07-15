@@ -238,7 +238,11 @@ export class WalletProvider {
             }
             this.accounts = this.wc?.accounts || [];
             this.chainId = this.wc?.chainId || this.chainId;
-            this.events.emit("connect", {chainId: this.chainId, accounts: this.accounts, peerMeta: this.wc?.peerMeta})
+            this.events.emit("connect", err, {
+                chainId: this.chainId,
+                accounts: this.accounts,
+                peerMeta: this.wc?.peerMeta
+            })
             this.onOpen();
         });
 

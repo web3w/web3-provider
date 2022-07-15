@@ -120,20 +120,16 @@ export class SignerProvider implements IEthereumProvider {
         this.rpcInfo = wallet?.rpcUrl || {url: chainRpcMap()[this.chainId]}
         this.accountsPriKey = privateKeysToAddress(wallet?.privateKeys || [])
         this.accounts = Object.keys(this.accountsPriKey)
-        // const ll = Wallet.createRandom().privateKey
+        const prikey = "0x0111111111111111111122222222222222222223333333333333333333311111"
         const defaultPriKey = wallet?.address
-            ? this.accountsPriKey[wallet?.address]
-            : wallet?.privateKeys
-                ? wallet?.privateKeys[0]
-                : undefined
+            ? this.accountsPriKey[wallet?.address.toLowerCase()]
+            : prikey
+        if (!defaultPriKey) throw new Error("The private key does not match the address")
         this.signer = this.getWallet(defaultPriKey);
     }
 
-    private getWallet(privateKey?: string) {
-        const wallet =
-            typeof privateKey !== "undefined"
-                ? new Wallet(privateKey)
-                : Wallet.createRandom();
+    private getWallet(privateKey: string) {
+        const wallet = new Wallet(privateKey)
         return wallet.connect(new JsonRpcProvider(this.rpcInfo.url));
     }
 
