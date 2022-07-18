@@ -5,13 +5,12 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "start": "react-scripts  --openssl-legacy-provider start",
+    "start": "GENERATE_SOURCEMAP=false react-scripts  --openssl-legacy-provider start",
     "build": "react-scripts build",
-    "deploy": "gh-pages -d build",
+    "deploy": "npm run build && gh-pages -d build",
     "link": "sudo npm link ../"
   },
   "dependencies": {
-    "@pmmmwh/react-refresh-webpack-plugin": "^0.5.7",
     "@walletconnect/client": "^1.7.8",
     "antd": "^4.21.6",
     "assert": "^2.0.0",
@@ -21,7 +20,6 @@
     "ethereumjs-util": "^7.1.5",
     "ethers": "^5.6.9",
     "events": "^3.3.0",
-    "gh-pages": "^4.0.0",
     "https-browserify": "^1.0.0",
     "net": "^1.0.2",
     "os-browserify": "^0.3.0",
@@ -36,6 +34,8 @@
     "web3-qrcode-modal": "^1.0.6"
   },
   "devDependencies": {
+    "gh-pages": "^4.0.0",
+    "@pmmmwh/react-refresh-webpack-plugin": "^0.5.7",
     "@types/axios": "^0.14.0",
     "@types/bignumber.js": "^5.0.0",
     "@types/node": "^13.13.52",

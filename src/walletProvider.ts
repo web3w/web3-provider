@@ -1,17 +1,18 @@
-import {EventEmitter} from 'events'
+import { EventEmitter } from 'events'
 import WalletConnect from "@walletconnect/client";
 import {
     BridgeOptions, IConnector,
     JsonRpcError,
     IRPCMap, RpcInfo, RequestArguments, ProviderAccounts
 } from "./types";
-import {fetchRPC, SIGNING_METHODS} from "./utils/rpc";
-import {chainRpcMap} from "./utils/chain";
+import { fetchRPC, SIGNING_METHODS } from "./utils/rpc";
+import { chainRpcMap } from "./utils/chain";
 
 export class WalletProvider {
     public events: any = new EventEmitter();
     public accounts: string[] = [];
     public chainId = 1;
+    public walletName = "wallet_connect";
 
 
     private pending = false;
@@ -27,7 +28,11 @@ export class WalletProvider {
         this.chainId = opts?.chainId || this.chainId;
         this.wc = this.register(opts);
         this.rpcs = rpcMap || chainRpcMap()
-        this.rpcInfo = {url: this.rpcs[this.chainId]}
+        this.rpcInfo = { url: this.rpcs[this.chainId] }
+    }
+
+    get address() {
+        return this.accounts[0]
     }
 
     public async request(args: RequestArguments): Promise<any> {
@@ -44,12 +49,12 @@ export class WalletProvider {
         if (SIGNING_METHODS.some(val => val == args.method)) {
             return this.send(args)
         } else {
-            const req = {...args, "jsonrpc": "2.0", "id": new Date().getTime()}
+            const req = { ...args, "jsonrpc": "2.0", "id": new Date().getTime() }
             const res = await fetchRPC(this.rpcInfo, JSON.stringify(req))
             if (res.result) {
                 return res.result
             } else {
-                throw  res.error
+                throw res.error
             }
         }
     }
@@ -69,15 +74,15 @@ export class WalletProvider {
             if (!this.connected) await this.open();
             if (!this.wc) reject("Wallet connect undefined")
             let result
-            const {method, params} = args
+            const { method, params } = args
             if (method.substring(0, 17) == "eth_signTypedData") {
                 if (typeof params?.[0] !== "string" && typeof params?.[1] !== 'string') throw new Error('eth_signTypedData param must string')
                 result = await this.wc?.signTypedData(params)
             } else if (method == "personal_sign") {
-                console.log("personal_sign", params)
+                // console.log("personal_sign", params)
                 result = await this.wc?.signPersonalMessage(params)
             } else if (method == "eth_sign") {
-                console.log("eth_sign", params)
+                // console.log("eth_sign", params)
                 result = await this.wc?.signMessage(params)
             } else if ("eth_signTransaction") {
                 result = await this.wc?.signTransaction(params)
@@ -86,14 +91,12 @@ export class WalletProvider {
             } else {
                 reject(args)
             }
-
             resolve(result)
-
         })
     }
 
     public async enable(): Promise<ProviderAccounts> {
-        const accounts = await this.request({method: "eth_requestAccounts"});
+        const accounts = await this.request({ method: "eth_requestAccounts" });
         return accounts as ProviderAccounts;
     }
 
@@ -159,8 +162,7 @@ export class WalletProvider {
     private register(opts: BridgeOptions): IConnector {
         if (this.wc) return this.wc;
         this.opts = opts || this.opts;
-        this.bridge = opts?.connector ? opts.connector.bridge : opts.bridge || ""
-        // this.qrcode = typeof opts?.qrcode === "undefined" || opts?.qrcode !== false;
+        this.bridge = opts?.connector ? opts.connector.bridge : opts.bridge || "";
         this.chainId = opts?.chainId || this.chainId;
         const connectorOpts = {
             bridge: this.bridge,
@@ -179,8 +181,7 @@ export class WalletProvider {
         if (this.wc.chainId) {
             this.chainId = this.wc.chainId;
         }
-        // this.accounts = this.wc.accounts;
-        // this.chainId = this.wc.chainId;
+
         this.registerConnectorEvents();
         return this.wc;
     }
@@ -209,7 +210,7 @@ export class WalletProvider {
         const errorPayload = {
             id: payload.id,
             jsonrpc: payload.jsonrpc,
-            error: {code, message},
+            error: { code, message },
         };
         this.events.emit("payload", errorPayload);
         return errorPayload;
@@ -222,7 +223,7 @@ export class WalletProvider {
         this.pending = true;
         this.registerConnectorEvents();
         this.wc
-            .createSession({chainId: this.chainId})
+            .createSession({ chainId: this.chainId })
             .then(() => this.events.emit("created"))
             .catch((e: Error) => this.events.emit("error", e));
     }
@@ -263,7 +264,7 @@ export class WalletProvider {
 
         this.wc.on("session_update", (error, payload) => {
             console.log("wc session_update")
-            const {accounts, chainId} = payload.params[0];
+            const { accounts, chainId } = payload.params[0];
             if (!this.accounts || (accounts && this.accounts !== accounts)) {
                 this.accounts = accounts;
                 this.events.emit("accountsChanged", accounts);
@@ -274,24 +275,5 @@ export class WalletProvider {
             }
         });
     }
-
-    // private async sendPayload(payload: any): Promise<JsonRpcResponse> {
-    //     this.wc = this.register(this.opts);
-    //     try {
-    //         const response = await this.wc.unsafeSend(payload);
-    //         return this.sanitizeResponse(response);
-    //     } catch (error) {
-    //         return this.onError(payload, (error as any).message);
-    //     }
-    // }
-
-    // private sanitizeResponse(
-    //     response: IJsonRpcResponseSuccess | IJsonRpcResponseError,
-    // ): JsonRpcResponse {
-    //     return typeof (response as IJsonRpcResponseError).error !== "undefined" &&
-    //     typeof (response as IJsonRpcResponseError).error.code === "undefined"
-    //         ? formatJsonRpcError(response.id, (response as IJsonRpcResponseError).error.message)
-    //         : (response as JsonRpcResponse);
-    // }
 }
 

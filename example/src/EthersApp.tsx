@@ -14,7 +14,7 @@ import {
     hashTypedDataMessage,
     hashMessage,
 } from "./helpers/utilities";
-import {convertAmountToRawNumber, convertStringToHex} from "./helpers/bignumber";
+import {convertStringToHex} from "./helpers/bignumber";
 import Banner from "./components/Banner";
 import AccountAssets from "./components/AccountAssets";
 import {eip712} from "./helpers/eip712";
@@ -38,13 +38,9 @@ import {
 } from "./helpers/base";
 
 import {Layout} from "antd";
-import {apiGetAccountAssets, apiGetAccountNonce, apiGetGasPrices} from "./helpers/api";
-import {Buffer} from "buffer";
 import {ethers} from "ethers";
 
 const {Content} = Layout
-
-window.Buffer = Buffer;
 
 export class EthersApp extends React.Component<any, any> {
     public state: IAppState = {
@@ -54,6 +50,8 @@ export class EthersApp extends React.Component<any, any> {
     public connect = async () => {
         const provider = new WalletProvider({qrcodeModal: QRCodeModal, bridge});
         const ethersSigner = new ethers.providers.Web3Provider(provider).getSigner()
+
+        console.log("Ethers Signer", ethersSigner)
         await this.setState({provider, ethersSigner});
 
         if (!provider.connected) {
@@ -133,7 +131,7 @@ export class EthersApp extends React.Component<any, any> {
     };
 
     public getAccountAssets = async () => {
-        const {address, chainId} = this.state;
+        const {address, chainId, ethersSigner} = this.state;
         this.setState({fetching: true});
         try {
             const asset = {
@@ -145,8 +143,17 @@ export class EthersApp extends React.Component<any, any> {
             }
             // get account balances
             // const assets: IAssetData[] = [asset]
-            const assets = await apiGetAccountAssets(address, chainId);
+            debugger
+            const ethBalance = await ethersSigner.getBalance();
+            const assets = [{
+                "symbol": "ETH",
+                "name": "Ether",
+                "decimals": "18",
+                "contractAddress": "",
+                "balance": ethBalance.toString()
+            }]
 
+            debugger
             await this.setState({fetching: false, address, assets});
         } catch (error) {
             console.error(error);
@@ -169,14 +176,13 @@ export class EthersApp extends React.Component<any, any> {
         // to
         const to = address;
 
-        // nonce
-        const _nonce = await apiGetAccountNonce(address, chainId);
+        const _nonce = await ethersSigner.getTransactionCount();
+        // debugger
         const nonce = sanitizeHex(convertStringToHex(_nonce));
 
         // gasPrice
-        const gasPrices = await apiGetGasPrices();
-        const _gasPrice = gasPrices.slow.price;
-        const gasPrice = sanitizeHex(convertStringToHex(convertAmountToRawNumber(_gasPrice, 9)));
+        const fee = await ethersSigner.getFeeData()
+        const gasPrice = fee.gasPrice.toHexString() // sanitizeHex(convertStringToHex(convertAmountToRawNumber(_gasPrice, 9)));
 
         // gasLimit
         const _gasLimit = 21000;
@@ -244,13 +250,12 @@ export class EthersApp extends React.Component<any, any> {
         const to = address;
 
         // nonce
-        const _nonce = await apiGetAccountNonce(address, chainId);
+        const _nonce = await ethersSigner.getTransactionCount();
         const nonce = sanitizeHex(convertStringToHex(_nonce));
 
         // gasPrice
-        const gasPrices = await apiGetGasPrices();
-        const _gasPrice = gasPrices.slow.price;
-        const gasPrice = sanitizeHex(convertStringToHex(convertAmountToRawNumber(_gasPrice, 9)));
+        const fee = await ethersSigner.getFeeData()
+        const gasPrice = fee.gasPrice.toHexString()
 
         // gasLimit
         const _gasLimit = 21000;
@@ -509,7 +514,7 @@ export class EthersApp extends React.Component<any, any> {
                         {!address && !assets.length ? (
                             <SLanding center>
                                 <h1>
-                                    {`Try out WalletProvider for ethers.js v${pkg.version}`}
+                                    {`Try out Ethers WalletProvider for ethers.js v${pkg.version}`}
 
                                 </h1>
                                 <SButtonContainer>

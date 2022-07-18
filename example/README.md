@@ -2,11 +2,17 @@
 
 https://web3w.github.io/web3-provider/
 
+
+
 ## Webpack Config
 
 wallet-connect  
 `npm i url assert buffer net tls stream-browserify `
 
+``
+ 
+
+rm -fr node_modules/.cache
 
 web3  
 `npm i crypto-browserify https-browserify stream-http  os-browserify `
@@ -24,20 +30,11 @@ web3
     - install 'os-browserify'
       resolve.fallback: { "os": false }
 ```
-
-
-
-
+ 
 cd ./node_modules/react-scripts/config/  
 [webpack.config.js](node_modules/react-scripts/config/webpack.config.js)
 ```ts
  resolve: {
-    plugins: {
-        new webpack.ProvidePlugin({
-            Buffer: ['buffer', 'Buffer'],
-        }),
-        // ..
-    },
     fallback: {
         "stream": require.resolve("stream-browserify"),
         "assert": require.resolve("assert/"),
@@ -48,7 +45,15 @@ cd ./node_modules/react-scripts/config/
         "http": require.resolve("stream-http"),
         "os": require.resolve("os-browserify/browser")
     }
-}
+} 
+plugins: {
+    new webpack.ProvidePlugin({
+        Buffer: ['buffer', 'Buffer'],
+    }),
+        new webpack.ProvidePlugin({
+            process: 'process/browser',
+        }),
+},
       
 ```
 

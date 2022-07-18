@@ -43,38 +43,38 @@ export async function fetchRPC(rpc: RpcInfo, body: string) {
     }
 }
 
-const rpcUrl = CHAIN_CONFIG["1"].rpcs[0]
+// const rpcUrl = CHAIN_CONFIG["1"].rpcs[0]
 
-export async function getBlockByNumber(blockNum: number, url?: string) {
-    const blockHex = "0x" + blockNum.toString(16)
-    const getBlock = {
-        "jsonrpc": "2.0",
-        "method": "eth_getBlockByNumber",
-        "params": [blockHex, true],
-        "id": new Date().getTime()
-    }
-    return fetchRPC({url: url || rpcUrl}, JSON.stringify(getBlock))
-}
+// export async function getBlockByNumber(blockNum: number, url?: string) {
+//     const blockHex = "0x" + blockNum.toString(16)
+//     const getBlock = {
+//         "jsonrpc": "2.0",
+//         "method": "eth_getBlockByNumber",
+//         "params": [blockHex, true],
+//         "id": new Date().getTime()
+//     }
+//     return fetchRPC({url: url || rpcUrl}, JSON.stringify(getBlock))
+// }
 
-export async function getTransactionByHash(txHash: string, url?: string) {
-    const getTxByHash = {
-        "jsonrpc": "2.0",
-        "method": "eth_getTransactionByHash",
-        "params": [txHash],
-        "id": new Date().getTime()
-    }
-    return fetchRPC({url: url || rpcUrl}, JSON.stringify(getTxByHash))
-}
+// export async function getTransactionByHash(txHash: string, url?: string) {
+//     const getTxByHash = {
+//         "jsonrpc": "2.0",
+//         "method": "eth_getTransactionByHash",
+//         "params": [txHash],
+//         "id": new Date().getTime()
+//     }
+//     return fetchRPC({url: url || rpcUrl}, JSON.stringify(getTxByHash))
+// }
 
-export async function getTransactionReceipt(txHash: string, url?: string) {
-    const getReceipt = {
-        "jsonrpc": "2.0",
-        "method": "eth_getTransactionReceipt",
-        "params": [txHash],
-        "id": new Date().getTime()
-    }
-    return fetchRPC({url: url || rpcUrl}, JSON.stringify(getReceipt))
-}
+// export async function getTransactionReceipt(txHash: string, url?: string) {
+//     const getReceipt = {
+//         "jsonrpc": "2.0",
+//         "method": "eth_getTransactionReceipt",
+//         "params": [txHash],
+//         "id": new Date().getTime()
+//     }
+//     return fetchRPC({url: url || rpcUrl}, JSON.stringify(getReceipt))
+// }
 
 export function safeJsonParse(value) {
     if (typeof value !== "string") {

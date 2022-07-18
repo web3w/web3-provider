@@ -1,3 +1,4 @@
+#! --openssl-legacy-provider
 import {ecSignHash, privateKeysToAddress, privateKeyToAddress, SignerProvider} from "../src/signerProvider";
 import secrets from '../../../secrets.json'
 import Web3 from "web3";
@@ -23,6 +24,11 @@ const signer = new SignerProvider({chainId: 4})
 
     const ethSigner = ethersTest.getSigner()
 
+
+
+
+    console.log("nonce",await ethSigner.getTransactionCount())
+    debugger
     const blockNumber1=await ethersTest.getBlockNumber()
 
     const blockHex = "0x" + (blockNumber).toString(16)

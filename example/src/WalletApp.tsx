@@ -1,4 +1,6 @@
 import * as React from "react";
+// import WalletConnect from "@walletconnect/client";
+// import QRCodeModal from "@walletconnect/qrcode-modal";
 import QRCodeModal from "web3-qrcode-modal";
 import {convertUtf8ToHex} from "@walletconnect/utils";
 import {IInternalEvent} from "@walletconnect/types";
@@ -39,24 +41,27 @@ import {
 
 import {Layout} from "antd";
 import {apiGetAccountAssets, apiGetAccountNonce, apiGetGasPrices} from "./helpers/api";
-import Web3 from "web3";
 
 const {Content, Footer} = Layout
 
 
-export class Web3App extends React.Component<any, any> {
-
+export class WalletApp extends React.Component<any, any> {
     public state: IAppState = {
         ...INITIAL_STATE,
     };
 
     public connect = async () => {
+        // bridge url
+        // const bridge = "https://bridge.walletconnect.org";
 
-        const provider = new WalletProvider({qrcodeModal: QRCodeModal, bridge});
-        const connector = provider.connector
-        const web3Signer = new Web3(provider)
-        console.log("Web3 Signer", web3Signer)
-        await this.setState({connector, web3Signer});
+        // create new connector
+        // const connector = new WalletConnect({ bridge, qrcodeModal: QRCodeModal });
+
+        const client = new WalletProvider({qrcodeModal: QRCodeModal, bridge});
+        // // const {accounts, chainId} = await client.connect();
+        // // console.log(accounts, chainId);
+        const connector = client.connector
+        await this.setState({connector});
 
         // check if already connected
         if (!connector.connected) {
@@ -353,9 +358,8 @@ export class Web3App extends React.Component<any, any> {
             // toggle pending request indicator
             this.setState({pendingRequest: true});
 
-            debugger
             // send message
-            const result = await web3Signer.eth.signMessage(msgParams);
+            const result = await connector.signMessage(msgParams);
 
             // verify signature
             const valid = await verifySignature(address, result, hash, chainId);
@@ -555,14 +559,13 @@ export class Web3App extends React.Component<any, any> {
                         {!address && !assets.length ? (
                             <SLanding center>
                                 <h1>
-                                    {`Try out Web3 WalletConnect v${pkg.version}`}
+                                    {`Try out WalletConnect v${pkg.version}`}
 
                                 </h1>
                                 <SButtonContainer>
                                     <SConnectButton left onClick={this.connect} fetching={fetching}>
                                         {"Connect to WalletConnect"}
                                     </SConnectButton>
-
                                 </SButtonContainer>
                             </SLanding>
                         ) : (

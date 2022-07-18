@@ -1,10 +1,15 @@
-# web3-provider
+# web3-provider 
+Wallet Connect Client compatible with Web3.js and ethers.js
 
-https://web3w.github.io/web3-provider/
+example: https://web3w.github.io/web3-provider/
+
+##install
+`npm i web3-signer-provider`
 
 ## For ethers.js
 ### connect
 ```ts
+    import {WalletProvider} from 'web3-signer-provider'
     public connect = async () => { 
         const provider = new WalletProvider({qrcodeModal: QRCodeModal, bridge});
         const ethersSigner = new ethers.providers.Web3Provider(provider).getSigner()
@@ -73,7 +78,8 @@ https://web3w.github.io/web3-provider/
 ## For web3.js
 ### connect
 ```ts
-public connect = async () => {
+ import {WalletProvider} from 'web3-signer-provider'
+ public connect = async () => {
     const provider = new WalletProvider({qrcodeModal: QRCodeModal, bridge});
     const web3Signer = new Web3(provider)
 
@@ -138,3 +144,7 @@ public killSession = async () => {
     this.resetApp();
 };
 ```
+
+
+## Test 
+`export NODE_OPTIONS=--openssl-legacy-provider`
