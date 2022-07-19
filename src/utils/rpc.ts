@@ -111,7 +111,7 @@ export function formatErrorMessage(error, data?) {
 }
 
 export function getHashMessage(msg: string) {
-    if (isHexString(msg)) {
+    if (isHexString(msg) && msg.length !==66) {
         const utf8Str = toUtf8String(arrayify(msg))
         return hashMessage(utf8Str)
     } else {

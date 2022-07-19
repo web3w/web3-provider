@@ -196,13 +196,15 @@ export class SignerProvider implements IEthereumProvider {
         }
     }
 
-    public async send(method: string,
-                      params?: unknown[] | object) {
-        return this.request({
-            method,
-            params
-        })
-    }
+    // public send(method: string,
+    //                   params?: unknown[] | object) {
+    //     return this.request({
+    //         method,
+    //         params
+    //     })
+    // }
+
+    // send?: (request: { method: string, params?: Array<any> }, callback: (error: any, response: any) => void)
 
     public sendAsync(
         args: RequestArguments,
