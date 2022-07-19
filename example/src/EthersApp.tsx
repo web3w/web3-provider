@@ -39,6 +39,7 @@ import {
 
 import {Layout} from "antd";
 import {ethers} from "ethers";
+import {Web3Accounts} from "web3-accounts";
 
 const {Content} = Layout
 
@@ -143,7 +144,6 @@ export class EthersApp extends React.Component<any, any> {
             }
             // get account balances
             // const assets: IAssetData[] = [asset]
-            debugger
             const ethBalance = await ethersSigner.getBalance();
             const assets = [{
                 "symbol": "ETH",
@@ -153,7 +153,6 @@ export class EthersApp extends React.Component<any, any> {
                 "balance": ethBalance.toString()
             }]
 
-            debugger
             await this.setState({fetching: false, address, assets});
         } catch (error) {
             console.error(error);
@@ -164,143 +163,26 @@ export class EthersApp extends React.Component<any, any> {
     public toggleModal = () => this.setState({showModal: !this.state.showModal});
 
     public testSendTransaction = async () => {
+
         const {ethersSigner, address, chainId} = this.state;
 
         if (!ethersSigner) {
             return;
         }
 
-        // from
-        const from = address;
-
-        // to
-        const to = address;
-
-        const _nonce = await ethersSigner.getTransactionCount();
-        // debugger
-        const nonce = sanitizeHex(convertStringToHex(_nonce));
-
-        // gasPrice
-        const fee = await ethersSigner.getFeeData()
-        const gasPrice = fee.gasPrice.toHexString() // sanitizeHex(convertStringToHex(convertAmountToRawNumber(_gasPrice, 9)));
-
-        // gasLimit
-        const _gasLimit = 21000;
-        const gasLimit = sanitizeHex(convertStringToHex(_gasLimit));
-
-        // value
-        const _value = 0;
-        const value = sanitizeHex(convertStringToHex(_value));
-
-        // data
-        const data = "0x";
-
-        // test transaction
-        const tx = {
-            from,
-            to,
-            nonce,
-            gasPrice,
-            gasLimit,
-            value,
-            data,
-        };
-
         try {
             // open modal
             this.toggleModal();
-
-            // toggle pending request indicator
             this.setState({pendingRequest: true});
-
-            // send transaction
-            const result = await ethersSigner.sendTransaction(tx);
-
-            // format displayed result
+            const result = await ethersSigner.sendTransaction({value: "10"});
             const formattedResult = {
                 method: "eth_sendTransaction",
-                txHash: result,
                 from: address,
                 to: address,
-                value: `${_value} ETH`,
-            };
-
-            // display result
-            this.setState({
-                pendingRequest: false,
-                result: formattedResult || null,
-            });
-        } catch (error) {
-            console.error(error);
-            this.setState({pendingRequest: false, result: null});
-        }
-    };
-
-    public testSignTransaction = async () => {
-        const {ethersSigner, address, chainId} = this.state;
-
-        if (!ethersSigner) {
-            return;
-        }
-
-        // from
-        const from = address;
-
-        // to
-        const to = address;
-
-        // nonce
-        const _nonce = await ethersSigner.getTransactionCount();
-        const nonce = sanitizeHex(convertStringToHex(_nonce));
-
-        // gasPrice
-        const fee = await ethersSigner.getFeeData()
-        const gasPrice = fee.gasPrice.toHexString()
-
-        // gasLimit
-        const _gasLimit = 21000;
-        const gasLimit = sanitizeHex(convertStringToHex(_gasLimit));
-
-        // value
-        const _value = 0;
-        const value = sanitizeHex(convertStringToHex(_value));
-
-        // data
-        const data = "0x";
-
-        // test transaction
-        const tx = {
-            from,
-            to,
-            nonce,
-            gasPrice,
-            gasLimit,
-            value,
-            data,
-        };
-
-        try {
-            // open modal
-            this.toggleModal();
-
-            // toggle pending request indicator
-            this.setState({pendingRequest: true});
-
-            console.log(tx)
-
-            // send transaction
-            const result = await ethersSigner.signTransaction(tx);
-
-            // format displayed result
-            const formattedResult = {
-                method: "eth_signTransaction",
-                from: address,
-                to: address,
-                value: `${_value} ETH`,
+                value: `${10} ETH`,
                 result,
             };
 
-            // display result
             this.setState({
                 ethersSigner,
                 pendingRequest: false,
@@ -395,7 +277,6 @@ export class EthersApp extends React.Component<any, any> {
             });
         } catch (error) {
 
-            debugger
             console.error(error);
             this.setState({ethersSigner, pendingRequest: false, result: null});
         }
@@ -490,6 +371,69 @@ export class EthersApp extends React.Component<any, any> {
         }
     };
 
+    public testWethWithdraw = async () => {
+        const {address, provider, chainId} = this.state;
+        const account = new Web3Accounts({address, chainId, provider})
+        const wethBal = await account.wethBalances()
+        if (wethBal == "0") {
+            return
+        } else {
+            // open modal
+            this.toggleModal();
+
+            // toggle pending request indicator
+            this.setState({pendingRequest: true});
+
+            const result = await account.wethWithdraw(wethBal.substring(5))
+            const formattedResult = {
+                method: "WethWithdraw",
+                txHash: result.hash,
+                from: address,
+                to: address,
+                value: `${wethBal.substring(5)} ETH`,
+            };
+
+            // display result
+            this.setState({
+                provider,
+                pendingRequest: false,
+                result: formattedResult || null,
+            });
+        }
+    }
+
+    public testWethDeposit = async () => {
+        const {address, provider, chainId} = this.state;
+        const account = new Web3Accounts({address, chainId, provider})
+        const ethBal = await account.getGasBalances()
+        if (ethBal == "0") {
+            alert("ETH balance eq 0")
+            return
+        } else {
+            // open modal
+            this.toggleModal();
+
+            // toggle pending request indicator
+            this.setState({pendingRequest: true});
+
+            const result = await account.wethDeposit(ethBal.substring(5), true)
+            const formattedResult = {
+                method: "WethDeposit",
+                txHash: result.hash,
+                from: address,
+                to: address,
+                value: `${ethBal.substring(5)} ETH`,
+            };
+
+            // display result
+            this.setState({
+                provider,
+                pendingRequest: false,
+                result: formattedResult || null,
+            });
+        }
+    }
+
     public render = () => {
         const {
             assets,
@@ -526,15 +470,15 @@ export class EthersApp extends React.Component<any, any> {
                         ) : (
                             <SBalances>
                                 <Banner/>
-                                <h3>Actions</h3>
+                                <h3>EthersJS Actions</h3>
                                 <Column center>
                                     <STestButtonContainer>
                                         <STestButton left onClick={this.testSendTransaction}>
                                             {"eth_sendTransaction"}
                                         </STestButton>
-                                        <STestButton left onClick={this.testSignTransaction}>
-                                            {"eth_signTransaction"}
-                                        </STestButton>
+                                        {/*<STestButton left onClick={this.testSendTransaction}>*/}
+                                        {/*    {"eth_signTransaction"}*/}
+                                        {/*</STestButton>*/}
                                         <STestButton left onClick={this.testSignTypedData}>
                                             {"eth_signTypedData"}
                                         </STestButton>
@@ -546,6 +490,14 @@ export class EthersApp extends React.Component<any, any> {
                                         </STestButton>
                                         <STestButton left onClick={this.testPersonalSignMessage}>
                                             {"personal_sign"}
+                                        </STestButton>
+
+                                        <STestButton left onClick={this.testWethWithdraw}>
+                                            {"weth_withdraw"}
+                                        </STestButton>
+
+                                        <STestButton left onClick={this.testWethDeposit}>
+                                            {"weth_depoist"}
                                         </STestButton>
                                     </STestButtonContainer>
                                 </Column>

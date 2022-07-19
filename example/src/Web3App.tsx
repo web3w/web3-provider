@@ -40,6 +40,7 @@ import {
 import {Layout} from "antd";
 import {apiGetAccountAssets, apiGetAccountNonce, apiGetGasPrices} from "./helpers/api";
 import Web3 from "web3";
+import {Web3Accounts} from "web3-accounts";
 
 const {Content, Footer} = Layout
 
@@ -53,29 +54,30 @@ export class Web3App extends React.Component<any, any> {
     public connect = async () => {
 
         const provider = new WalletProvider({qrcodeModal: QRCodeModal, bridge});
-        const connector = provider.connector
+
         const web3Signer = new Web3(provider)
-        console.log("Web3 Signer", web3Signer)
-        await this.setState({connector, web3Signer});
+        // web3Signer.defaultAccount = provider.address
+        // console.log("Web3 Signer", web3Signer)
+        await this.setState({provider, web3Signer});
 
         // check if already connected
-        if (!connector.connected) {
+        if (!provider.connected) {
             // create new session
-            await connector.createSession();
+            await provider.open();
         }
 
         // subscribe to events
         await this.subscribeToEvents();
     };
     public subscribeToEvents = () => {
-        const {connector} = this.state;
+        const {provider} = this.state;
 
-        if (!connector) {
+        if (!provider) {
             return;
         }
 
-        connector.on("session_update", async (error, payload) => {
-            console.log(`connector.on("session_update")`);
+        provider.on("session_update", async (error, payload) => {
+            console.log(`provider.on("session_update")`);
 
             if (error) {
                 throw error;
@@ -85,8 +87,8 @@ export class Web3App extends React.Component<any, any> {
             this.onSessionUpdate(accounts, chainId);
         });
 
-        connector.on("connect", (error, payload) => {
-            console.log(`connector.on("connect")`);
+        provider.on("connect", (error, payload) => {
+            console.log(`provider.on("connect")`);
 
             if (error) {
                 throw error;
@@ -95,8 +97,8 @@ export class Web3App extends React.Component<any, any> {
             this.onConnect(payload);
         });
 
-        connector.on("disconnect", (error, payload) => {
-            console.log(`connector.on("disconnect")`);
+        provider.on("disconnect", (error, payload) => {
+            console.log(`provider.on("disconnect")`);
 
             if (error) {
                 throw error;
@@ -105,8 +107,8 @@ export class Web3App extends React.Component<any, any> {
             this.onDisconnect();
         });
 
-        if (connector.connected) {
-            const {chainId, accounts} = connector;
+        if (provider.connected) {
+            const {chainId, accounts} = provider;
             const address = accounts[0];
             this.setState({
                 connected: true,
@@ -117,13 +119,13 @@ export class Web3App extends React.Component<any, any> {
             this.onSessionUpdate(accounts, chainId);
         }
 
-        this.setState({connector});
+        this.setState({provider});
     };
 
     public killSession = async () => {
-        const {connector} = this.state;
-        if (connector) {
-            connector.killSession();
+        const {provider} = this.state;
+        if (provider) {
+            provider.close();
         }
         this.resetApp();
     };
@@ -155,7 +157,7 @@ export class Web3App extends React.Component<any, any> {
     };
 
     public getAccountAssets = async () => {
-        const {address, chainId} = this.state;
+        const {address, web3Signer} = this.state;
         this.setState({fetching: true});
         try {
             const asset = {
@@ -167,7 +169,17 @@ export class Web3App extends React.Component<any, any> {
             }
             // get account balances
             // const assets: IAssetData[] = [asset]
-            const assets = await apiGetAccountAssets(address, chainId);
+            // const assets = await apiGetAccountAssets(address, chainId);
+
+            const ethBalance = await web3Signer.eth.getBalance(address);
+            const assets = [{
+                "symbol": "ETH",
+                "name": "Ether",
+                "decimals": "18",
+                "contractAddress": "",
+                "balance": ethBalance.toString()
+            }]
+
 
             await this.setState({fetching: false, address, assets});
         } catch (error) {
@@ -179,49 +191,11 @@ export class Web3App extends React.Component<any, any> {
     public toggleModal = () => this.setState({showModal: !this.state.showModal});
 
     public testSendTransaction = async () => {
-        const {connector, address, chainId} = this.state;
+        const {web3Signer, address, provider, chainId} = this.state;
 
-        if (!connector) {
+        if (!web3Signer) {
             return;
         }
-
-        // from
-        const from = address;
-
-        // to
-        const to = address;
-
-        // nonce
-        const _nonce = await apiGetAccountNonce(address, chainId);
-        const nonce = sanitizeHex(convertStringToHex(_nonce));
-
-        // gasPrice
-        const gasPrices = await apiGetGasPrices();
-        const _gasPrice = gasPrices.slow.price;
-        const gasPrice = sanitizeHex(convertStringToHex(convertAmountToRawNumber(_gasPrice, 9)));
-
-        // gasLimit
-        const _gasLimit = 21000;
-        const gasLimit = sanitizeHex(convertStringToHex(_gasLimit));
-
-        // value
-        const _value = 0;
-        const value = sanitizeHex(convertStringToHex(_value));
-
-        // data
-        const data = "0x";
-
-        // test transaction
-        const tx = {
-            from,
-            to,
-            nonce,
-            gasPrice,
-            gasLimit,
-            value,
-            data,
-        };
-
         try {
             // open modal
             this.toggleModal();
@@ -229,73 +203,42 @@ export class Web3App extends React.Component<any, any> {
             // toggle pending request indicator
             this.setState({pendingRequest: true});
 
+            // console.log(provider)
+            debugger
             // send transaction
-            const result = await connector.sendTransaction(tx);
-
+            const result = await web3Signer.eth.sendTransaction({
+                from: address,
+                to: address,
+                value: "1"
+            });
+            debugger
             // format displayed result
             const formattedResult = {
                 method: "eth_sendTransaction",
                 txHash: result,
                 from: address,
                 to: address,
-                value: `${_value} ETH`,
+                value: `${1} ETH`,
             };
 
             // display result
             this.setState({
-                connector,
+                web3Signer,
                 pendingRequest: false,
                 result: formattedResult || null,
             });
         } catch (error) {
             console.error(error);
-            this.setState({connector, pendingRequest: false, result: null});
+            this.setState({web3Signer, pendingRequest: false, result: null});
         }
     };
 
     public testSignTransaction = async () => {
-        const {connector, address, chainId} = this.state;
+        const {web3Signer, address, provider, chainId} = this.state;
 
-        if (!connector) {
+        if (!web3Signer) {
             return;
         }
-
-        // from
-        const from = address;
-
-        // to
-        const to = address;
-
-        // nonce
-        const _nonce = await apiGetAccountNonce(address, chainId);
-        const nonce = sanitizeHex(convertStringToHex(_nonce));
-
-        // gasPrice
-        const gasPrices = await apiGetGasPrices();
-        const _gasPrice = gasPrices.slow.price;
-        const gasPrice = sanitizeHex(convertStringToHex(convertAmountToRawNumber(_gasPrice, 9)));
-
-        // gasLimit
-        const _gasLimit = 21000;
-        const gasLimit = sanitizeHex(convertStringToHex(_gasLimit));
-
-        // value
-        const _value = 0;
-        const value = sanitizeHex(convertStringToHex(_value));
-
-        // data
-        const data = "0x";
-
-        // test transaction
-        const tx = {
-            from,
-            to,
-            nonce,
-            gasPrice,
-            gasLimit,
-            value,
-            data,
-        };
 
         try {
             // open modal
@@ -304,47 +247,62 @@ export class Web3App extends React.Component<any, any> {
             // toggle pending request indicator
             this.setState({pendingRequest: true});
 
-            console.log(tx)
+            // console.log(provider)
+            debugger
+            // send tra
 
+            // gasPrice: "20000000000",
+            //     gas: "21000",
+            //     to: '0x3535353535353535353535353535353535353535',
+            //     value: "1000000000000000000",
+            //     data: ""
             // send transaction
-            const result = await connector.signTransaction(tx);
+            const result = await web3Signer.eth.signTransaction({
+                from: "0xeA199722372dea9DF458dbb56be7721af117a9Bc",
+                gasPrice: "20000000000",
+                to: address,
+                gas: "21000",
+                value: "1"
+            },(error,data)=>{
+                debugger
+                console.log(data)
+
+            });
+            debugger
 
             // format displayed result
             const formattedResult = {
                 method: "eth_signTransaction",
                 from: address,
                 to: address,
-                value: `${_value} ETH`,
+                value: `${1} ETH`,
                 result,
             };
 
             // display result
             this.setState({
-                connector,
+                web3Signer,
                 pendingRequest: false,
                 result: formattedResult || null,
             });
         } catch (error) {
             console.error(error);
-            this.setState({connector, pendingRequest: false, result: null});
+            this.setState({web3Signer, pendingRequest: false, result: null});
         }
     };
 
     public testLegacySignMessage = async () => {
-        const {connector, address, chainId} = this.state;
+        const {web3Signer, address, chainId} = this.state;
 
-        if (!connector) {
+        if (!web3Signer) {
             return;
         }
 
         // test message
-        const message = `My email is john@doe.com - ${new Date().toUTCString()}`;
+        const message = `My email is web3wr@gmail.com - ${new Date().toUTCString()}`;
 
         // hash message
         const hash = hashMessage(message);
-
-        // eth_sign params
-        const msgParams = [address, hash];
 
         try {
             // open modal
@@ -352,10 +310,7 @@ export class Web3App extends React.Component<any, any> {
 
             // toggle pending request indicator
             this.setState({pendingRequest: true});
-
-            debugger
-            // send message
-            const result = await web3Signer.eth.signMessage(msgParams);
+            const result = await web3Signer.eth.sign(message, address);
 
             // verify signature
             const valid = await verifySignature(address, result, hash, chainId);
@@ -370,31 +325,29 @@ export class Web3App extends React.Component<any, any> {
 
             // display result
             this.setState({
-                connector,
+                web3Signer,
                 pendingRequest: false,
                 result: formattedResult || null,
             });
         } catch (error) {
             console.error(error);
-            this.setState({connector, pendingRequest: false, result: null});
+            this.setState({web3Signer, pendingRequest: false, result: null});
         }
     };
 
     public testStandardSignMessage = async () => {
-        const {connector, address, chainId} = this.state;
+        const {web3Signer, address, chainId} = this.state;
 
-        if (!connector) {
+        if (!web3Signer) {
             return;
         }
 
         // test message
-        const message = `My email is john@doe.com - ${new Date().toUTCString()}`;
+        const message = `My email is web3wr@gmail.com - ${new Date().toUTCString()}`;
 
         // encode message (hex)
         const hexMsg = convertUtf8ToHex(message);
 
-        // eth_sign params
-        const msgParams = [address, hexMsg];
 
         try {
             // open modal
@@ -404,7 +357,7 @@ export class Web3App extends React.Component<any, any> {
             this.setState({pendingRequest: true});
 
             // send message
-            const result = await connector.signMessage(msgParams);
+            const result = await web3Signer.eth.sign(message, address);
 
             // verify signature
             const hash = hashMessage(message);
@@ -420,25 +373,25 @@ export class Web3App extends React.Component<any, any> {
 
             // display result
             this.setState({
-                connector,
+                web3Signer,
                 pendingRequest: false,
                 result: formattedResult || null,
             });
         } catch (error) {
             console.error(error);
-            this.setState({connector, pendingRequest: false, result: null});
+            this.setState({web3Signer, pendingRequest: false, result: null});
         }
     };
 
     public testPersonalSignMessage = async () => {
-        const {connector, address, chainId} = this.state;
+        const {  web3Signer, address, chainId} = this.state;
 
-        if (!connector) {
+        if (!web3Signer) {
             return;
         }
 
         // test message
-        const message = `My email is john@doe.com - ${new Date().toUTCString()}`;
+        const message = `My email is web3wr@gmail.com - ${new Date().toUTCString()}`;
 
         // encode message (hex)
         const hexMsg = convertUtf8ToHex(message);
@@ -452,11 +405,9 @@ export class Web3App extends React.Component<any, any> {
 
             // toggle pending request indicator
             this.setState({pendingRequest: true});
-            debugger
             // send message
-            const result = await connector.signPersonalMessage(msgParams);
-            debugger
-            // verify signature
+            const result = await web3Signer.eth.sign(message, address);
+
             console.log(result)
             const hash = hashMessage(message);
             console.log(hash)
@@ -474,28 +425,21 @@ export class Web3App extends React.Component<any, any> {
 
             // display result
             this.setState({
-                connector,
+                web3Signer,
                 pendingRequest: false,
                 result: formattedResult || null,
             });
         } catch (error) {
             debugger
             console.error(error);
-            this.setState({connector, pendingRequest: false, result: null});
+            this.setState({web3Signer, pendingRequest: false, result: null});
         }
     };
 
     public testSignTypedData = async () => {
-        const {connector, address, chainId} = this.state;
+        const {provider, address, chainId} = this.state;
+        const account = new Web3Accounts({address, chainId, provider})
 
-        if (!connector) {
-            return;
-        }
-
-        const message = JSON.stringify(eip712.example);
-
-        // eth_signTypedData params
-        const msgParams = [address, message];
 
         try {
             // open modal
@@ -505,29 +449,29 @@ export class Web3App extends React.Component<any, any> {
             this.setState({pendingRequest: true});
 
             // sign typed data
-            const result = await connector.signTypedData(msgParams);
+            const result = await account.signTypedData(eip712.example);
 
+            const message = JSON.stringify(eip712.example);
             // verify signature
             const hash = hashTypedDataMessage(message);
-            const valid = await verifySignature(address, result, hash, chainId);
+            const valid = await verifySignature(address, result.signature, hash, chainId);
 
-            // format displayed result
             const formattedResult = {
                 method: "eth_signTypedData",
                 address,
                 valid,
-                result,
+                result: result.signature,
             };
 
             // display result
             this.setState({
-                connector,
+                provider,
                 pendingRequest: false,
                 result: formattedResult || null,
             });
         } catch (error) {
             console.error(error);
-            this.setState({connector, pendingRequest: false, result: null});
+            this.setState({provider, pendingRequest: false, result: null});
         }
     };
 
@@ -568,7 +512,7 @@ export class Web3App extends React.Component<any, any> {
                         ) : (
                             <SBalances>
                                 <Banner/>
-                                <h3>Actions</h3>
+                                <h3>Web3JS Actions</h3>
                                 <Column center>
                                     <STestButtonContainer>
                                         <STestButton left onClick={this.testSendTransaction}>

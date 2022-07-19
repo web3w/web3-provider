@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events'
+import {EventEmitter} from 'events'
 import {
     IEthereumProvider,
     ProviderAccounts,
@@ -6,8 +6,8 @@ import {
     RpcInfo,
     WalletInfo
 } from './types'
-import { getHashMessage, SIGNING_METHODS } from "./utils/rpc";
-import { chainRpcMap } from "./utils/chain";
+import {getHashMessage, SIGNING_METHODS} from "./utils/rpc";
+import {chainRpcMap} from "./utils/chain";
 import {
     arrayify,
     hexDataSlice,
@@ -15,14 +15,14 @@ import {
     joinSignature,
     splitSignature
 } from "@ethersproject/bytes";
-import { _TypedDataEncoder as TypedDataEncoder, hashMessage } from "@ethersproject/hash";
-import { computePublicKey } from "@ethersproject/signing-key";
-import { Wallet } from "@ethersproject/wallet"
-import { keccak256 } from "@ethersproject/keccak256";
-import { JsonRpcProvider } from "@ethersproject/providers"
-import { ec as EC } from "elliptic";
-import { fetchRPC } from "./utils/rpc";
-import { ethers } from "ethers";
+import {_TypedDataEncoder as TypedDataEncoder, hashMessage} from "@ethersproject/hash";
+import {computePublicKey} from "@ethersproject/signing-key";
+import {Wallet} from "@ethersproject/wallet"
+import {keccak256} from "@ethersproject/keccak256";
+import {JsonRpcProvider} from "@ethersproject/providers"
+import {ec as EC} from "elliptic";
+import {fetchRPC} from "./utils/rpc";
+import {ethers} from "ethers";
 
 
 export interface EIP712TypedDataField {
@@ -81,7 +81,7 @@ export function ecSignHash(hash: string, privateKey: string): string {
     if (digestBytes.length !== 32) {
         // logger.throwArgumentError("bad digest length", "digest", digest);
     }
-    const signature = keyPair.sign(digestBytes, { canonical: true });
+    const signature = keyPair.sign(digestBytes, {canonical: true});
     const vrs = splitSignature({
         recoveryParam: signature.recoveryParam,
         r: hexZeroPad("0x" + signature.r.toString(16), 32),
@@ -119,7 +119,7 @@ export class SignerProvider implements IEthereumProvider {
 
     constructor(wallet?: Partial<WalletInfo>) {
         this.chainId = wallet?.chainId || 1
-        this.rpcInfo = wallet?.rpcUrl || { url: chainRpcMap()[this.chainId] }
+        this.rpcInfo = wallet?.rpcUrl || {url: chainRpcMap()[this.chainId]}
         this.accountsPriKey = privateKeysToAddress(wallet?.privateKeys || [prikey])
         this.accounts = Object.keys(this.accountsPriKey)
         const defaultPriKey = wallet?.address
@@ -132,6 +132,7 @@ export class SignerProvider implements IEthereumProvider {
     get address() {
         return this.accounts[0]
     }
+
     private getWallet(privateKey: string) {
         const wallet = new Wallet(privateKey)
         return wallet.connect(new JsonRpcProvider(this.rpcInfo.url));
@@ -139,7 +140,7 @@ export class SignerProvider implements IEthereumProvider {
 
     public async request(args: RequestArguments): Promise<any> {
         // console.log('request.payload', args.method)
-        const { params, method } = args
+        const {params, method} = args
         switch (args.method) {
             case 'eth_requestAccounts':
                 return this.accounts
@@ -189,10 +190,18 @@ export class SignerProvider implements IEthereumProvider {
             // }
             return ecSignHash(hash, privateKey)
         } else {
-            const req = { ...args, "jsonrpc": "2.0", "id": new Date().getTime() }
+            const req = {...args, "jsonrpc": "2.0", "id": new Date().getTime()}
             const res = await fetchRPC(this.rpcInfo, JSON.stringify(req))
             return res.result
         }
+    }
+
+    public async send(method: string,
+                      params?: unknown[] | object) {
+        return this.request({
+            method,
+            params
+        })
     }
 
     public sendAsync(
@@ -205,7 +214,7 @@ export class SignerProvider implements IEthereumProvider {
     }
 
     public async enable(): Promise<ProviderAccounts> {
-        const accounts = await this.request({ method: 'eth_requestAccounts' })
+        const accounts = await this.request({method: 'eth_requestAccounts'})
         return accounts as ProviderAccounts
     }
 

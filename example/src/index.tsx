@@ -19,8 +19,6 @@ const root = createRoot(rootDiv);
 
 root.render(
     <>
-        {/*<EthersApp/>*/}
-        {/*<Web3App/>*/}
         <App/>
     </>
 );

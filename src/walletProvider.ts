@@ -1,12 +1,14 @@
-import { EventEmitter } from 'events'
+import {EventEmitter} from 'events'
 import WalletConnect from "@walletconnect/client";
 import {
     BridgeOptions, IConnector,
     JsonRpcError,
-    IRPCMap, RpcInfo, RequestArguments, ProviderAccounts
+    IRPCMap, RpcInfo, RequestArguments, ProviderAccounts,
+    ITxData, IRequestOptions, IJsonRpcRequest
 } from "./types";
-import { fetchRPC, SIGNING_METHODS } from "./utils/rpc";
-import { chainRpcMap } from "./utils/chain";
+import {fetchRPC, SIGNING_METHODS} from "./utils/rpc";
+import {chainRpcMap} from "./utils/chain";
+import {parseTransactionData} from "@walletconnect/utils";
 
 export class WalletProvider {
     public events: any = new EventEmitter();
@@ -27,15 +29,58 @@ export class WalletProvider {
         this.bridge = opts?.bridge || "https://bridge.walletconnect.org"
         this.chainId = opts?.chainId || this.chainId;
         this.wc = this.register(opts);
+        this.wc.signTransaction = this.signTransaction
+        this.wc.sendTransaction = this.sendTransaction
+        this.wc.sendCustomRequest = this.sendCustomRequest
         this.rpcs = rpcMap || chainRpcMap()
-        this.rpcInfo = { url: this.rpcs[this.chainId] }
+        this.rpcInfo = {url: this.rpcs[this.chainId]}
     }
+
 
     get address() {
         return this.accounts[0]
     }
 
+    public async sendCustomRequest(request: Partial<IJsonRpcRequest>, options?: IRequestOptions) {
+        debugger
+        console.log("this.sendCustomRequest")
+    }
+
+    public async sendTransaction(tx: ITxData) {
+        debugger
+    }
+    public async signTransaction(tx: ITxData) {
+        if (!this.connected) {
+            throw new Error("ERROR_SESSION_DISCONNECTED");
+        }
+        debugger
+        const parsedTx = parseTransactionData(tx);
+
+        console.log(parsedTx)
+
+        // const request = this._formatRequest({
+        //     method: "eth_signTransaction",
+        //     params: [parsedTx],
+        // });
+        //
+        // const result = await this._sendCallRequest(request);
+        // return result;
+    }
+
+
+    //
+    // public async sendTransaction(rxRaw: string) {
+    //     debugger
+    //     console.log("sendTransaction 22")
+    //     // sendTransaction(signedTransaction: string | Promise<string>)
+    //     const args = {method: "eth_sendTransaction", params: rxRaw, "jsonrpc": "2.0", "id": new Date().getTime()}
+    //     return this.send(args)
+    // }
+
+
+
     public async request(args: RequestArguments): Promise<any> {
+        console.log("request", args)
         switch (args.method) {
             case "eth_requestAccounts":
                 return this.accounts;
@@ -49,7 +94,7 @@ export class WalletProvider {
         if (SIGNING_METHODS.some(val => val == args.method)) {
             return this.send(args)
         } else {
-            const req = { ...args, "jsonrpc": "2.0", "id": new Date().getTime() }
+            const req = {...args, "jsonrpc": "2.0", "id": new Date().getTime()}
             const res = await fetchRPC(this.rpcInfo, JSON.stringify(req))
             if (res.result) {
                 return res.result
@@ -59,22 +104,24 @@ export class WalletProvider {
         }
     }
 
-    public sendAsync<T = unknown>(
-        args: RequestArguments,
-        callback: (error: Error | null, response: any) => void
-    ): void {
-        this.request(args)
-            .then(response => callback(null, response))
-            .catch(error => callback(error, null));
-    }
+    // public sendAsync<T = unknown>(
+    //     args: RequestArguments,
+    //     callback: (error: Error | null, response: any) => void
+    // ): void {
+    //     console.log("sendAsync", args)
+    //     this.request(args)
+    //         .then(response => callback(null, response))
+    //         .catch(error => callback(error, null));
+    // }
 
     public send(args: any) {
+        console.log("send", args)
         this.wc = this.register(this.opts);
         return new Promise(async (resolve, reject) => {
             if (!this.connected) await this.open();
             if (!this.wc) reject("Wallet connect undefined")
             let result
-            const { method, params } = args
+            const {method, params} = args
             if (method.substring(0, 17) == "eth_signTypedData") {
                 if (typeof params?.[0] !== "string" && typeof params?.[1] !== 'string') throw new Error('eth_signTypedData param must string')
                 result = await this.wc?.signTypedData(params)
@@ -85,9 +132,32 @@ export class WalletProvider {
                 // console.log("eth_sign", params)
                 result = await this.wc?.signMessage(params)
             } else if ("eth_signTransaction") {
-                result = await this.wc?.signTransaction(params)
+                console.log("eth_signTransaction")
+                debugger
+                let tx = params
+
+                if (Array.isArray(params)) {
+                    tx = params[0]
+                }
+                const rawStr = await this.wc?.signTransaction(tx)
+                // console.log(rawStr)
+                const args = {
+                    method: "eth_sendRawTransaction",
+                    params: [rawStr],
+                    "jsonrpc": "2.0",
+                    "id": new Date().getTime()
+                }
+                const res = await this.wc?.sendCustomRequest(args)
+                console.log(res)
+                result = res.result
             } else if (method == "eth_sendTransaction") {
-                result = await this.wc?.sendTransaction(params)
+                debugger
+                console.log("eth_sendTransaction")
+                let tx = params
+                if (Array.isArray(params)) {
+                    tx = params[0]
+                }
+                result = await this.wc?.sendTransaction(tx)
             } else {
                 reject(args)
             }
@@ -95,8 +165,9 @@ export class WalletProvider {
         })
     }
 
+
     public async enable(): Promise<ProviderAccounts> {
-        const accounts = await this.request({ method: "eth_requestAccounts" });
+        const accounts = await this.request({method: "eth_requestAccounts"});
         return accounts as ProviderAccounts;
     }
 
@@ -183,6 +254,11 @@ export class WalletProvider {
         }
 
         this.registerConnectorEvents();
+
+        this.wc.signTransaction = this.signTransaction
+        this.wc.sendTransaction = this.sendTransaction
+        this.wc.sendCustomRequest = this.sendCustomRequest
+
         return this.wc;
     }
 
@@ -210,7 +286,7 @@ export class WalletProvider {
         const errorPayload = {
             id: payload.id,
             jsonrpc: payload.jsonrpc,
-            error: { code, message },
+            error: {code, message},
         };
         this.events.emit("payload", errorPayload);
         return errorPayload;
@@ -223,13 +299,14 @@ export class WalletProvider {
         this.pending = true;
         this.registerConnectorEvents();
         this.wc
-            .createSession({ chainId: this.chainId })
+            .createSession({chainId: this.chainId})
             .then(() => this.events.emit("created"))
             .catch((e: Error) => this.events.emit("error", e));
     }
 
     private registerConnectorEvents() {
         this.wc = this.register(this.opts);
+
 
         this.wc.on("connect", (err: Error | null) => {
             console.log("wc connect")
@@ -264,7 +341,7 @@ export class WalletProvider {
 
         this.wc.on("session_update", (error, payload) => {
             console.log("wc session_update")
-            const { accounts, chainId } = payload.params[0];
+            const {accounts, chainId} = payload.params[0];
             if (!this.accounts || (accounts && this.accounts !== accounts)) {
                 this.accounts = accounts;
                 this.events.emit("accountsChanged", accounts);

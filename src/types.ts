@@ -177,3 +177,24 @@ export interface JsonRpcPayload {
     params?: any[];
     id?: string | number;
 }
+
+export interface ITxData {
+    from: string;
+    to: string;
+    nonce: string;
+    gasPrice: string;
+    gasLimit: string;
+    value: string;
+    data: string;
+}
+
+export interface IJsonRpcRequest {
+    id: number;
+    jsonrpc: string;
+    method: string;
+    params: any[];
+}
+
+export interface IRequestOptions {
+    forcePushNotification?: boolean;
+}

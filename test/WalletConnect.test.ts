@@ -4,23 +4,29 @@ import {privateKeyToAddress, SignerProvider} from "../src/signerProvider";
 import secrets from '../../../secrets.json'
 import {WalletProvider} from "../src/walletProvider";
 import {ethers} from "ethers";
+import {isValidAddress, parseTransactionData} from "@walletconnect/utils";
 
 const account = privateKeyToAddress(secrets.privateKeys[0])
 
 const signer = new SignerProvider({chainId: 4, privateKeys: secrets.privateKeys})
 
-// const tx = {
-//         "chainId": "0x4",
-//         "gas": "0x5208",
-//         "type": "0x2",
-//         "maxFeePerGas": "0x649534e00",
-//         "maxPriorityFeePerGas": "0x649534e00",
-//         "nonce": "0x2ea",
-//         "value": "0x0",
-//         "from": account,
-//         "to": "0x32f4b63a46c1d12ad82cabc778d75abf9889821a",
-//         "data": "0x"
-//     }
+
+// const foo = parseTransactionData()
+//
+const foo1 = isValidAddress("0xeA199722372dea9DF458dbb56be7721af117a9Bc")
+console.log(foo1)
+const tx1 = {
+        "chainId": "0x4",
+        "gas": "0x5208",
+        "type": "0x2",
+        "maxFeePerGas": "0x649534e00",
+        "maxPriorityFeePerGas": "0x649534e00",
+        "nonce": "0x2ea",
+        "value": "0x0",
+        "from": account,
+        "to": "0x32f4b63a46c1d12ad82cabc778d75abf9889821a",
+        "data": "0x"
+    }
 
 const tx = {
         "from": account,
@@ -30,6 +36,15 @@ const tx = {
         "value": "0x00",
         "data": "0x"
     }
+
+const foo11 = parseTransactionData({
+    from: "0xeA199722372dea9DF458dbb56be7721af117a9Bc",
+    gasPrice: "20000000000",
+    to: "0xeA199722372dea9DF458dbb56be7721af117a9Bc",
+    gas: "21000",
+    value: "1"
+})
+    console.log(foo11)
 
 ;(async () => {
 
@@ -116,7 +131,7 @@ const tx = {
                 jsonrpc: e.jsonrpc,
                 result: res
             })
- 
+
         })
 
         mobileClient.on("connect", (val, e) => {
