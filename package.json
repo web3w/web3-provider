@@ -1,6 +1,6 @@
 {
   "name": "web3-signer-provider",
-  "version": "1.1.12",
+  "version": "1.1.13",
   "description": "A provider in EIP1193",
   "main": "lib/index.js",
   "type": "lib/index.d.ts",

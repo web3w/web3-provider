@@ -220,6 +220,20 @@ export class SignerProvider implements IEthereumProvider {
         return accounts as ProviderAccounts
     }
 
+    public async signMessage(message: string): Promise<string> {
+        return this.request({
+            "method": "personal_sign",
+            params: [message, this.address]
+        })
+    }
+
+    public async signTypedData(typedData: EIP712TypedData) {
+        return this.request({
+            "method": "eth_signTypedData",
+            params: [this.address, typedData]
+        })
+    }
+
     public on(event: any, listener: any): void {
         this.events.on(event, listener)
     }

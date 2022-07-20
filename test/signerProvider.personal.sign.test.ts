@@ -31,15 +31,15 @@ const web3Test = new Web3(signer)
     const signHash2=await ethSigner.signMessage(hash)
 
 
-    const hash1 = web3Test.eth.accounts.hashMessage(hash)
-    const has2 = hashMessage(hash)
+    // const hash1 = web3Test.eth.accounts.hashMessage(hash)
+    // const has2 = hashMessage(hash)
 
     const signHash0 = web3Test.eth.accounts.sign(hash, secrets.privateKeys[0])
     const signHash = await web3Test.eth.sign(hash, account)
 
 
 
-    console.assert(signHash0.signature == signHash, "eth_sign Hash:signHash")
+    console.assert(signHash0.signature == signHash2, "eth_sign Hash:signHash")
 
 })()
 
