@@ -2,14 +2,15 @@ import {ecSignHash, privateKeysToAddress, privateKeyToAddress, SignerProvider} f
 import secrets from '../../../secrets.json'
 import {Web3Provider} from "@ethersproject/providers";
 import Web3 from "web3";
+import {splitSignature} from "@ethersproject/bytes";
 
-const accounts = privateKeysToAddress(secrets.privateKeys)
-const account = privateKeyToAddress(secrets.privateKeys[0])
+const account ='0x32f4B63A46c1D12AD82cABC778D75aBF9889821a'
 
-const signer = new SignerProvider({chainId: 4, privateKeys: secrets.privateKeys})
+const wallet ={chainId: 4, privateKeys: secrets.privateKeys}
+const signer = new SignerProvider(wallet)
 
 ;(async () => {
-    const hash = "0x0a56a97fdd2cbc0baace77dcccf86143eeb8f1aaf23af3337f7adc17a56bdfe8"
+    const hash = "0x96f8ace777473b81e601cd4dbfce2cb8a0ec2de5ad0e939f7075e5f4707fd805"
 
 
     const web3Test = new Web3(signer)
@@ -24,6 +25,6 @@ const signer = new SignerProvider({chainId: 4, privateKeys: secrets.privateKeys}
     // const signHash = await signer.request({method: "eth_sign", params: [account, hash]})
     console.assert(sign == signHash, "eth_sign Hash:signHash")
 
-
+    console.log(splitSignature(sign))
 })()
 
