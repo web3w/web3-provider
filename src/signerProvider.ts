@@ -130,7 +130,7 @@ export class SignerProvider implements IEthereumProvider {
     }
 
     get address() {
-        return this.accounts[0]
+        return this.signer.address || this.accounts[0]
     }
 
     private getWallet(privateKey: string) {

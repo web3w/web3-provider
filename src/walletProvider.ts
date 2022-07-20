@@ -38,7 +38,7 @@ export class WalletProvider {
 
 
     get address() {
-        return this.accounts[0]
+        return this.wc?.accounts[0] || this.accounts[0]
     }
 
     public async sendCustomRequest(request: Partial<IJsonRpcRequest>, options?: IRequestOptions) {

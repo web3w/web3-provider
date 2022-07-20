@@ -2,10 +2,8 @@ import {ecSignHash, privateKeysToAddress, privateKeyToAddress, SignerProvider} f
 import secrets from '../../../secrets.json'
 import Web3 from "web3";
 import {hashMessage} from "@ethersproject/hash";
-import {arrayify, hexlify, hexValue, isHexString} from "@ethersproject/bytes";
-import {keccak256} from "@ethersproject/keccak256";
-import {toUtf8Bytes,toUtf8String} from "@ethersproject/strings";
-import {ethers} from "ethers";
+import {arrayify, hexlify, hexValue, isHexString, splitSignature} from "@ethersproject/bytes";
+
 
 const accounts = privateKeysToAddress(secrets.privateKeys)
 const account ='0x32f4B63A46c1D12AD82cABC778D75aBF9889821a'
@@ -26,16 +24,19 @@ const web3Test = new Web3(signer)
        //  const hashHex = web3Test.utils.toHex(hash)
     }
 
-    const ethersTest = new ethers.providers.Web3Provider(signer)
-    const ethSigner =  ethersTest.getSigner()
-    const signHash2=await ethSigner.signMessage(hash)
+    // const ethersTest = new ethers.providers.Web3Provider(signer)
+    // const ethSigner =  ethersTest.getSigner()
+    // const signHash3=await ethSigner.signMessage(hash)
+    const signHash2=await signer.signMessage(hash)
 
 
-    // const hash1 = web3Test.eth.accounts.hashMessage(hash)
-    // const has2 = hashMessage(hash)
+    const hash1 = web3Test.eth.accounts.hashMessage(hash)
+    const has2 = hashMessage(arrayify(hash))
 
     const signHash0 = web3Test.eth.accounts.sign(hash, secrets.privateKeys[0])
-    const signHash = await web3Test.eth.sign(hash, account)
+    // const signHash = await web3Test.eth.sign(hash, account)
+
+    console.log(splitSignature(signHash2))
 
 
 
