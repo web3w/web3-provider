@@ -30,10 +30,11 @@ export const SIGNING_METHODS = [
 export const STATE_METHODS = ["eth_accounts", "eth_chainId", "net_version"];
 
 export async function fetchRPC(rpc: RpcInfo, body: string) {
+    // rpc.headers =
     const res = await fetch(rpc.url, {
             method: 'POST',
             body,
-            headers: rpc.headers && {'Content-Type': 'application/json'}
+            headers: {...rpc.headers, 'Content-Type': 'application/json'}
         }
     );
     if (res.ok) {

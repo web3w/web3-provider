@@ -74,13 +74,22 @@ const tx = {
         //     })
 
         const web3Test = new Web3(provider)
-        web3Test.eth.sign(message, account).then(result=>{
+        web3Test.eth.sign(message, account).then(result => {
             console.log("2.4 web3Test  signature", result)
         })
 
+        web3Test.eth.sendTransaction({
+            from: account,
+            to: account,
+            value: "1"
+        }).then(result => {
+            console.log("2.4.1 web3TestsendTransaction", result)
+        });
+
+
         const ethSigner = new ethers.providers.Web3Provider(provider).getSigner()
         ethSigner.signMessage(message).then(result => {
-            console.log("2.4 ethSigner signMessage", result)
+            console.log("2.5 ethSigner signMessage", result)
         })
 
 

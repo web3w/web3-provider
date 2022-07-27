@@ -1,5 +1,6 @@
 import {EventEmitter} from 'events'
 import {
+    EIP1193Provider,
     IEthereumProvider,
     ProviderAccounts,
     RequestArguments,
@@ -15,7 +16,7 @@ import {
     joinSignature,
     splitSignature
 } from "@ethersproject/bytes";
-import {_TypedDataEncoder as TypedDataEncoder, hashMessage} from "@ethersproject/hash";
+import {_TypedDataEncoder as TypedDataEncoder, hashMessage, id} from "@ethersproject/hash";
 import {computePublicKey} from "@ethersproject/signing-key";
 import {Wallet} from "@ethersproject/wallet"
 import {keccak256} from "@ethersproject/keccak256";
@@ -91,6 +92,30 @@ export function ecSignHash(hash: string, privateKey: string): string {
     return joinSignature(vrs)
 }
 
+
+export function getEIP712DomainHash(): string {
+    const primaryType = "EIP712Domain"
+    const types = {
+        EIP712Domain: [
+            {name: 'name', type: 'string'},
+            {name: 'version', type: 'string'},
+            {name: 'chainId', type: 'uint256'},
+            {name: 'verifyingContract', type: 'address'}
+        ]
+    }
+    return id(TypedDataEncoder.from(types).encodeType(primaryType))
+}
+
+export function getEIP712TypeHash(
+    primaryType: string,
+    types: EIP712Types = {}) {
+    if (types.EIP712Domain) {
+        delete types.EIP712Domain
+    }
+    const typeName = TypedDataEncoder.from(types).encodeType(primaryType)
+    return id(typeName);
+}
+
 /**
  * Compute a complete EIP712 hash given a struct hash.
  */
@@ -108,7 +133,7 @@ const allowedTransactionKeys: { [key: string]: boolean } = {
 
 const prikey = "0x0111111111111111111122222222222222222223333333333333333333311111"
 
-export class SignerProvider implements IEthereumProvider {
+export class SignerProvider implements EIP1193Provider {
     public events: any = new EventEmitter()
     public walletName = "wallet_signer"
     public accounts: string[]
@@ -215,7 +240,7 @@ export class SignerProvider implements IEthereumProvider {
             .catch(error => callback(error, undefined));
     }
 
-    public async enable(): Promise<ProviderAccounts> {
+    public async connect(): Promise<ProviderAccounts> {
         const accounts = await this.request({method: 'eth_requestAccounts'})
         return accounts as ProviderAccounts
     }

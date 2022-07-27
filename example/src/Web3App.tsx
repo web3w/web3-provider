@@ -52,20 +52,15 @@ export class Web3App extends React.Component<any, any> {
     };
 
     public connect = async () => {
-
         const provider = new WalletProvider({qrcodeModal: QRCodeModal, bridge});
-
         const web3Signer = new Web3(provider)
         // web3Signer.defaultAccount = provider.address
-        // console.log("Web3 Signer", web3Signer)
         await this.setState({provider, web3Signer});
-
         // check if already connected
         if (!provider.connected) {
             // create new session
             await provider.open();
         }
-
         // subscribe to events
         await this.subscribeToEvents();
     };
@@ -88,17 +83,16 @@ export class Web3App extends React.Component<any, any> {
         });
 
         provider.on("connect", (error, payload) => {
-            console.log(`provider.on("connect")`);
+            console.log(`provider.on("connect")`,payload);
 
             if (error) {
                 throw error;
             }
-
             this.onConnect(payload);
         });
 
         provider.on("disconnect", (error, payload) => {
-            console.log(`provider.on("disconnect")`);
+            console.log(`provider.on("disconnect")`,payload);
 
             if (error) {
                 throw error;
@@ -263,7 +257,7 @@ export class Web3App extends React.Component<any, any> {
                 to: address,
                 gas: "21000",
                 value: "1"
-            },(error,data)=>{
+            }, (error, data) => {
                 debugger
                 console.log(data)
 
@@ -384,7 +378,7 @@ export class Web3App extends React.Component<any, any> {
     };
 
     public testPersonalSignMessage = async () => {
-        const {  web3Signer, address, chainId} = this.state;
+        const {web3Signer, address, chainId} = this.state;
 
         if (!web3Signer) {
             return;
@@ -449,6 +443,7 @@ export class Web3App extends React.Component<any, any> {
             this.setState({pendingRequest: true});
 
             // sign typed data
+            // @ts-ignore
             const result = await account.signTypedData(eip712.example);
 
             const message = JSON.stringify(eip712.example);
@@ -474,6 +469,47 @@ export class Web3App extends React.Component<any, any> {
             this.setState({provider, pendingRequest: false, result: null});
         }
     };
+
+    public testSignTypedDataList = async () => {
+        const {provider, address, chainId} = this.state;
+        const account = new Web3Accounts({address, chainId, provider})
+
+
+        try {
+            // open modal
+            this.toggleModal();
+
+            // toggle pending request indicator
+            this.setState({pendingRequest: true});
+
+            // sign typed data
+            // @ts-ignore
+            const result = await account.signTypedData(eip712.nftOrder);
+
+            const message = JSON.stringify(eip712.example);
+            // verify signature
+            const hash = hashTypedDataMessage(message);
+            const valid = await verifySignature(address, result.signature, hash, chainId);
+
+            const formattedResult = {
+                method: "eth_signTypedData",
+                address,
+                valid,
+                result: result.signature,
+            };
+
+            // display result
+            this.setState({
+                provider,
+                pendingRequest: false,
+                result: formattedResult || null,
+            });
+        } catch (error) {
+            console.error(error);
+            this.setState({provider, pendingRequest: false, result: null});
+        }
+    };
+
 
     public render = () => {
         const {
@@ -524,8 +560,8 @@ export class Web3App extends React.Component<any, any> {
                                         <STestButton left onClick={this.testSignTypedData}>
                                             {"eth_signTypedData"}
                                         </STestButton>
-                                        <STestButton left onClick={this.testLegacySignMessage}>
-                                            {"eth_sign (legacy)"}
+                                        <STestButton left onClick={this.testSignTypedDataList}>
+                                            {"eth_signTypedDataList"}
                                         </STestButton>
                                         <STestButton left onClick={this.testStandardSignMessage}>
                                             {"eth_sign (standard)"}

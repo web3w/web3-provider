@@ -4,7 +4,9 @@ Wallet Connect Client compatible with Web3.js and ethers.js
 example: https://web3w.github.io/web3-provider/
 
 ##install
-`npm i web3-signer-provider`
+`npm i web3-signer-provider`  
+node 18
+`NODE_OPTIONS=--openssl-legacy-provider`
 
 ## For ethers.js
 ### connect

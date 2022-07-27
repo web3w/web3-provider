@@ -6,8 +6,7 @@ import {App} from "./App";
 declare global {
     interface Window {
         blockies: any;
-        connector: any;
-        Buffer: Buffer
+        connector: any
     }
 }
 window.Buffer = Buffer;

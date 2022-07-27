@@ -2,7 +2,8 @@
 
 https://web3w.github.io/web3-provider/
 
-
+### node 18
+`"start": "GENERATE_SOURCEMAP=false react-scripts  --openssl-legacy-provider start",`
 
 ## Webpack Config
 
