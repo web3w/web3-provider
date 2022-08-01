@@ -56,7 +56,7 @@ export class EthersApp extends React.Component<any, any> {
         await this.setState({provider, ethersSigner});
 
         if (!provider.connected) {
-            await provider.open();
+            await provider.connect();
         }
         // subscribe to events
         await this.subscribeToEvents();

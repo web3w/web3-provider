@@ -1,5 +1,4 @@
 import {RpcInfo} from "../types";
-import {CHAIN_CONFIG} from "./chain";
 import {arrayify, isHexString} from "@ethersproject/bytes";
 import {toUtf8String} from "@ethersproject/strings";
 import {hashMessage} from "@ethersproject/hash";

@@ -9,7 +9,6 @@ import Header from "./components/Header";
 import Loader from "./components/Loader";
 
 import {
-    sanitizeHex,
     verifySignature,
     hashTypedDataMessage,
     hashMessage,
@@ -53,75 +52,66 @@ export class Web3App extends React.Component<any, any> {
 
     public connect = async () => {
         const provider = new WalletProvider({qrcodeModal: QRCodeModal, bridge});
-        const web3Signer = new Web3(provider)
-        // web3Signer.defaultAccount = provider.address
-        await this.setState({provider, web3Signer});
+        // this.setState({provider})
         // check if already connected
         if (!provider.connected) {
             // create new session
-            await provider.open();
+            await provider.connect();
         }
+        // this.setState({provider});
+        // debugger
         // subscribe to events
-        await this.subscribeToEvents();
+        await this.subscribeToEvents(provider);
     };
-    public subscribeToEvents = () => {
-        const {provider} = this.state;
 
+    public subscribeToEvents =async (provider) => {
         if (!provider) {
             return;
         }
-
-        provider.on("session_update", async (error, payload) => {
-            console.log(`provider.on("session_update")`);
-
+        provider.on("chainChanged", async (error, payload) => {
+            console.log(`provider.on("chainChanged")`);
+            debugger
             if (error) {
                 throw error;
             }
-
             const {chainId, accounts} = payload.params[0];
             this.onSessionUpdate(accounts, chainId);
         });
 
         provider.on("connect", (error, payload) => {
-            console.log(`provider.on("connect")`,payload);
-
+            console.log(`provider.on("connect")`, payload);
             if (error) {
                 throw error;
             }
+            debugger
             this.onConnect(payload);
         });
 
         provider.on("disconnect", (error, payload) => {
-            console.log(`provider.on("disconnect")`,payload);
+            console.log(`provider.on("disconnect")`, payload);
 
             if (error) {
                 throw error;
             }
 
-            this.onDisconnect();
+            this.killSession();
         });
+        await this.setState({provider});
 
         if (provider.connected) {
             const {chainId, accounts} = provider;
-            const address = accounts[0];
-            this.setState({
-                connected: true,
-                chainId,
-                accounts,
-                address,
-            });
             this.onSessionUpdate(accounts, chainId);
         }
-
-        this.setState({provider});
     };
 
     public killSession = async () => {
         const {provider} = this.state;
+
         if (provider) {
-            provider.close();
+            provider.disconnect();
         }
         this.resetApp();
+
     };
 
     public resetApp = async () => {
@@ -129,9 +119,13 @@ export class Web3App extends React.Component<any, any> {
     };
 
     public onConnect = async (payload: IInternalEvent) => {
+        const {provider} = this.state;
         const {chainId, accounts} = payload.params[0];
         const address = accounts[0];
+        const web3Signer = new Web3(provider)
+        web3Signer.defaultAccount = address
         await this.setState({
+            web3Signer,
             connected: true,
             chainId,
             accounts,
@@ -140,13 +134,14 @@ export class Web3App extends React.Component<any, any> {
         this.getAccountAssets();
     };
 
-    public onDisconnect = async () => {
-        this.resetApp();
-    };
-
     public onSessionUpdate = async (accounts: string[], chainId: number) => {
+        debugger
+        const {provider} = this.state;
         const address = accounts[0];
-        await this.setState({chainId, accounts, address});
+        const web3Signer = new Web3(provider)
+        web3Signer.defaultAccount = address
+        await this.setState({chainId, accounts, address, web3Signer});
+
         await this.getAccountAssets();
     };
 
@@ -198,14 +193,14 @@ export class Web3App extends React.Component<any, any> {
             this.setState({pendingRequest: true});
 
             // console.log(provider)
-            debugger
+
             // send transaction
             const result = await web3Signer.eth.sendTransaction({
                 from: address,
                 to: address,
                 value: "1"
             });
-            debugger
+
             // format displayed result
             const formattedResult = {
                 method: "eth_sendTransaction",
@@ -242,7 +237,7 @@ export class Web3App extends React.Component<any, any> {
             this.setState({pendingRequest: true});
 
             // console.log(provider)
-            debugger
+
             // send tra
 
             // gasPrice: "20000000000",
@@ -258,11 +253,11 @@ export class Web3App extends React.Component<any, any> {
                 gas: "21000",
                 value: "1"
             }, (error, data) => {
-                debugger
-                console.log(data)
+
+                console.log("signTransaction", data)
 
             });
-            debugger
+
 
             // format displayed result
             const formattedResult = {
@@ -339,10 +334,6 @@ export class Web3App extends React.Component<any, any> {
         // test message
         const message = `My email is web3wr@gmail.com - ${new Date().toUTCString()}`;
 
-        // encode message (hex)
-        const hexMsg = convertUtf8ToHex(message);
-
-
         try {
             // open modal
             this.toggleModal();
@@ -367,13 +358,12 @@ export class Web3App extends React.Component<any, any> {
 
             // display result
             this.setState({
-                web3Signer,
                 pendingRequest: false,
                 result: formattedResult || null,
             });
         } catch (error) {
             console.error(error);
-            this.setState({web3Signer, pendingRequest: false, result: null});
+            this.setState({pendingRequest: false, result: null});
         }
     };
 
@@ -387,11 +377,6 @@ export class Web3App extends React.Component<any, any> {
         // test message
         const message = `My email is web3wr@gmail.com - ${new Date().toUTCString()}`;
 
-        // encode message (hex)
-        const hexMsg = convertUtf8ToHex(message);
-
-        // eth_sign params
-        const msgParams = [hexMsg, address];
 
         try {
             // open modal
@@ -402,12 +387,10 @@ export class Web3App extends React.Component<any, any> {
             // send message
             const result = await web3Signer.eth.sign(message, address);
 
-            console.log(result)
             const hash = hashMessage(message);
-            console.log(hash)
-            debugger
+
+
             const valid = await verifySignature(address, result, hash, chainId);
-            console.log(valid)
 
             // format displayed result
             const formattedResult = {
@@ -424,14 +407,14 @@ export class Web3App extends React.Component<any, any> {
                 result: formattedResult || null,
             });
         } catch (error) {
-            debugger
+
             console.error(error);
             this.setState({web3Signer, pendingRequest: false, result: null});
         }
     };
 
     public testSignTypedData = async () => {
-        const {provider, address, chainId} = this.state;
+        const {provider, address, chainId, web3Signer} = this.state;
         const account = new Web3Accounts({address, chainId, provider})
 
 
@@ -447,8 +430,14 @@ export class Web3App extends React.Component<any, any> {
             const result = await account.signTypedData(eip712.example);
 
             const message = JSON.stringify(eip712.example);
+
+            // web3Signer
             // verify signature
             const hash = hashTypedDataMessage(message);
+
+            console.log(hash, result.signature)
+            const ll = web3Signer.eth.accounts.recover(hash, result.signature)
+            debugger
             const valid = await verifySignature(address, result.signature, hash, chainId);
 
             const formattedResult = {

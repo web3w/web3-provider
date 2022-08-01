@@ -35,10 +35,7 @@ export class WalletProvider implements EIP1193Provider {
         this.opts = opts;
         this.bridge = opts?.bridge || "https://bridge.walletconnect.org"
         this.chainId = opts?.chainId || 1;
-        this.wc = this.register(opts);
-        // this.wc.signTransaction = this.signTransaction
-        // this.wc.sendTransaction = this.sendTransaction
-        // this.wc.sendCustomRequest = this.sendCustomRequest
+        this.registerConnectorEvents();
         this.rpcs = rpcMap || chainRpcMap()
         this.rpcInfo = {url: this.rpcs[this.chainId]}
     }
@@ -102,7 +99,6 @@ export class WalletProvider implements EIP1193Provider {
         args: RequestArguments,
         callback: (error: Error | null, response: any) => void
     ): void {
-        debugger
         console.log("sendAsync", args)
         this.request(args)
             .then(response => callback(null, response))
@@ -118,7 +114,6 @@ export class WalletProvider implements EIP1193Provider {
             let result
             const {method, params} = args
             if (method.substring(0, 17) == "eth_signTypedData") {
-                debugger
                 if (typeof params?.[0] !== "string" && typeof params?.[1] !== 'string') throw new Error('eth_signTypedData param must string')
                 //
                 result = await this.wc?.signTypedData(params)
@@ -130,7 +125,6 @@ export class WalletProvider implements EIP1193Provider {
                 result = await this.wc?.signMessage(params)
             } else if (method == "eth_signTransaction") {
 
-                debugger
                 let tx = params
 
                 if (Array.isArray(params)) {
@@ -149,7 +143,7 @@ export class WalletProvider implements EIP1193Provider {
                 console.log("eth_signTransaction", res)
                 result = res.result
             } else if (method == "eth_sendTransaction") {
-                debugger
+
                 let tx = params
                 if (Array.isArray(params)) {
                     tx = params[0]
@@ -165,9 +159,13 @@ export class WalletProvider implements EIP1193Provider {
     }
 
 
-    public async connect(): Promise<ProviderAccounts> {
-        const accounts = await this.request({method: "eth_requestAccounts"});
-        return accounts as ProviderAccounts;
+    public async connect() {
+        if (this.connected) {
+            return this.request({method: "eth_requestAccounts"});
+
+        } else {
+            return this.open();
+        }
     }
 
     get connected(): boolean {
@@ -184,7 +182,6 @@ export class WalletProvider implements EIP1193Provider {
     }
 
     public on(event: string, listener: any) {
-        // console.log("Wallet Connect Provider on", event)
         this.events.on(event, listener);
     }
 
@@ -218,14 +215,16 @@ export class WalletProvider implements EIP1193Provider {
         });
     }
 
-    public async close(): Promise<void> {
+    public async disconnect(): Promise<void> {
         if (typeof this.wc === "undefined") return;
         if (this.wc.connected) {
             this.wc.killSession();
         }
+        if (window) {
+            localStorage.removeItem("walletconnect")
+        }
         this.onClose();
     }
-
 
     // ---------- Private ----------------------------------------------- //
 
@@ -252,7 +251,7 @@ export class WalletProvider implements EIP1193Provider {
             this.chainId = this.wc.chainId;
         }
 
-        this.registerConnectorEvents();
+        // this.registerConnectorEvents();
 
         // this.wc.signTransaction = this.signTransaction
         // this.wc.sendTransaction = this.sendTransaction
@@ -305,7 +304,6 @@ export class WalletProvider implements EIP1193Provider {
 
     private registerConnectorEvents() {
         this.wc = this.register(this.opts);
-
         this.wc.on("connect", (err: Error | null, payload) => {
             console.log("wc connect", payload)
             if (err) {
@@ -331,19 +329,19 @@ export class WalletProvider implements EIP1193Provider {
 
         this.wc.on("modal_closed", () => {
             console.log("wc modal_closed")
-            this.events.emit("error", new Error("User closed modal"));
+            this.events.emit("error", "User closed modal");
         });
 
         this.wc.on("session_update", (error, payload) => {
-            console.log("wc session_update",{error,payload})
+            console.log("wc session_update", {error, payload})
             const {accounts, chainId} = payload.params[0];
             if (!this.accounts || (accounts && this.accounts !== accounts)) {
                 this.accounts = accounts;
-                this.events.emit("accountsChanged", accounts);
+                this.events.emit("accountsChanged", error, payload);
             }
             if (!this.chainId || (chainId && this.chainId !== chainId)) {
                 this.chainId = chainId;
-                this.events.emit("chainChanged", chainId);
+                this.events.emit("chainChanged", error, payload);
             }
         });
     }

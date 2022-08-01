@@ -25,7 +25,7 @@ export class App extends React.Component<any, any> {
 
     constructor(props) {
         super(props);
-        this.Web3App = React.createRef();
+        // this.Web3App = React.createRef();
     }
 
     public state = {
@@ -48,108 +48,107 @@ export class App extends React.Component<any, any> {
 
     }
 
-    public connect = async () => {
+    // public connect = async () => {
+    //     const provider = new WalletProvider({qrcodeModal: QRCodeModal, bridge});
+    //     const connector = provider.connector
+    //     const web3Signer = new Web3(provider)
+    //     await this.setState({connector, web3Signer});
+    //
+    //     // check if already connected
+    //     if (!connector.connected) {
+    //         // create new session
+    //         await connector.createSession();
+    //     }
+    //
+    //     // subscribe to events
+    //     await this.subscribeToEvents();
+    // };
+    // public subscribeToEvents = () => {
+    //     const {connector} = this.state;
+    //
+    //     if (!connector) {
+    //         return;
+    //     }
+    //
+    //     connector.on("session_update", async (error, payload) => {
+    //         console.log(`connector.on("session_update")`);
+    //
+    //         if (error) {
+    //             throw error;
+    //         }
+    //
+    //         const {chainId, accounts} = payload.params[0];
+    //         this.onSessionUpdate(accounts, chainId);
+    //     });
+    //
+    //     connector.on("connect", (error, payload) => {
+    //         console.log(`connector.on("connect")`);
+    //
+    //         if (error) {
+    //             throw error;
+    //         }
+    //
+    //         this.onConnect(payload);
+    //     });
+    //
+    //     connector.on("disconnect", (error, payload) => {
+    //         console.log(`connector.on("disconnect")`);
+    //
+    //         if (error) {
+    //             throw error;
+    //         }
+    //
+    //         this.onDisconnect();
+    //     });
+    //
+    //     if (connector.connected) {
+    //         const {chainId, accounts} = connector;
+    //         const address = accounts[0];
+    //         this.setState({
+    //             connected: true,
+    //             chainId,
+    //             accounts,
+    //             address,
+    //         });
+    //         this.onSessionUpdate(accounts, chainId);
+    //     }
+    //
+    //     this.setState({connector});
+    // };
 
-        const provider = new WalletProvider({qrcodeModal: QRCodeModal, bridge});
-        const connector = provider.connector
-        const web3Signer = new Web3(provider)
-        await this.setState({connector, web3Signer});
+    // public killSession = async () => {
+    //     const {connector} = this.state;
+    //     if (connector) {
+    //         connector.killSession();
+    //     }
+    //     this.resetApp();
+    // };
 
-        // check if already connected
-        if (!connector.connected) {
-            // create new session
-            await connector.createSession();
-        }
+    // public resetApp = async () => {
+    //     await this.setState({...INITIAL_STATE});
+    // };
+    //
+    // public onConnect = async (payload: IInternalEvent) => {
+    //     const {chainId, accounts} = payload.params[0];
+    //     const address = accounts[0];
+    //     await this.setState({
+    //         connected: true,
+    //         chainId,
+    //         accounts,
+    //         address,
+    //     });
+    //     this.getAccountAssets();
+    // };
 
-        // subscribe to events
-        await this.subscribeToEvents();
-    };
-    public subscribeToEvents = () => {
-        const {connector} = this.state;
-
-        if (!connector) {
-            return;
-        }
-
-        connector.on("session_update", async (error, payload) => {
-            console.log(`connector.on("session_update")`);
-
-            if (error) {
-                throw error;
-            }
-
-            const {chainId, accounts} = payload.params[0];
-            this.onSessionUpdate(accounts, chainId);
-        });
-
-        connector.on("connect", (error, payload) => {
-            console.log(`connector.on("connect")`);
-
-            if (error) {
-                throw error;
-            }
-
-            this.onConnect(payload);
-        });
-
-        connector.on("disconnect", (error, payload) => {
-            console.log(`connector.on("disconnect")`);
-
-            if (error) {
-                throw error;
-            }
-
-            this.onDisconnect();
-        });
-
-        if (connector.connected) {
-            const {chainId, accounts} = connector;
-            const address = accounts[0];
-            this.setState({
-                connected: true,
-                chainId,
-                accounts,
-                address,
-            });
-            this.onSessionUpdate(accounts, chainId);
-        }
-
-        this.setState({connector});
-    };
-
-    public killSession = async () => {
-        const {connector} = this.state;
-        if (connector) {
-            connector.killSession();
-        }
-        this.resetApp();
-    };
-
-    public resetApp = async () => {
-        await this.setState({...INITIAL_STATE});
-    };
-
-    public onConnect = async (payload: IInternalEvent) => {
-        const {chainId, accounts} = payload.params[0];
-        const address = accounts[0];
-        await this.setState({
-            connected: true,
-            chainId,
-            accounts,
-            address,
-        });
-        this.getAccountAssets();
-    };
-
-    public onDisconnect = async () => {
-        this.resetApp();
-    };
-
-    public onSessionUpdate = async (accounts: string[], chainId: number) => {
-        const address = accounts[0];
-        await this.setState({chainId, accounts, address});
-        await this.getAccountAssets();
-    };
+    // public onDisconnect = async () => {
+    //     this.resetApp();
+    // };
+    //
+    // public onSessionUpdate = async (accounts: string[], chainId: number) => {
+    //     const address = accounts[0];
+    //     await this.setState({chainId, accounts, address});
+    //     await this.getAccountAssets();
+    // };
 
     public render = () => {
         const {
