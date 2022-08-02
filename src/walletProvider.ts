@@ -61,7 +61,6 @@ export class WalletProvider implements EIP1193Provider {
         return this.wc?.accounts[0] || this.accounts[0]
     }
 
-
     public async request(args: RequestArguments): Promise<any> {
         console.log("request", args)
         switch (args.method) {
@@ -162,10 +161,21 @@ export class WalletProvider implements EIP1193Provider {
     public async connect() {
         if (this.connected) {
             return this.request({method: "eth_requestAccounts"});
-
         } else {
             return this.open();
         }
+    }
+
+
+    public async disconnect(): Promise<void> {
+        if (typeof this.wc === "undefined") return;
+        if (this.wc.connected) {
+            this.wc.killSession();
+        }
+        if (window) {
+            localStorage.removeItem("walletconnect")
+        }
+        this.onClose();
     }
 
     get connected(): boolean {
@@ -215,16 +225,6 @@ export class WalletProvider implements EIP1193Provider {
         });
     }
 
-    public async disconnect(): Promise<void> {
-        if (typeof this.wc === "undefined") return;
-        if (this.wc.connected) {
-            this.wc.killSession();
-        }
-        if (window) {
-            localStorage.removeItem("walletconnect")
-        }
-        this.onClose();
-    }
 
     // ---------- Private ----------------------------------------------- //
 
