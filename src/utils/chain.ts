@@ -44,6 +44,7 @@ export const CHAIN_CONFIG = {
         ]
     },
     "3": {
+        name: "Ethereum Ropsten",
         "rpcs": [
             "https://ropsten.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161"
         ],
