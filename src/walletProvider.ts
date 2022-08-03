@@ -22,6 +22,7 @@ export class WalletProvider implements EIP1193Provider {
   public accounts: string[] = []
   public chainId: number
   public walletName = 'wallet_connect'
+  public peerMetaName: string | undefined
 
 
   private pending = false
@@ -260,6 +261,7 @@ export class WalletProvider implements EIP1193Provider {
     this.registerConnectorEvents(this.wc)
     if (this.connected || this.pending) return
     this.pending = true
+    this.peerMetaName = this.wc.peerMeta?.name
     this.wc
       .createSession({ chainId: this.chainId })
       .then(() => this.events.emit('created'))

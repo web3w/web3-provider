@@ -17,7 +17,7 @@ node 18
         const ethersSigner = new ethers.providers.Web3Provider(provider).getSigner()
        
         if (!provider.connected) { 
-            await provider.open();
+            await provider.connect();
         } 
         // subscribe to events
         provider.on("connect", (error, payload) => {
@@ -86,7 +86,7 @@ node 18
     const web3Signer = new Web3(provider)
 
     if (!provider.connected) {
-        await provider.open();
+        await provider.connect();
     }
     // subscribe to events
     provider.on("connect", (error, payload) => {
