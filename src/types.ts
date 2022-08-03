@@ -1,6 +1,9 @@
 // import WalletConnectClient from "@walletconnect/client";
 // import QRCodeModal from "web3-qrcode-modal";
 import {IConnector} from "@walletconnect/types";
+import { BigNumberish } from '@ethersproject/bignumber'
+import { BytesLike } from '@ethersproject/bytes'
+import { AccessListish } from '@ethersproject/transactions'
 
 export type {IConnector}
 
@@ -197,4 +200,26 @@ export interface IJsonRpcRequest {
 
 export interface IRequestOptions {
     forcePushNotification?: boolean;
+}
+
+export type TransactionRequest = {
+    to?: string,
+    from?: string,
+    nonce?: BigNumberish,
+
+    gasLimit?: BigNumberish,
+    gasPrice?: BigNumberish,
+
+    data?: BytesLike,
+    value?: BigNumberish,
+    chainId?: number
+
+    type?: number;
+    accessList?: AccessListish;
+
+    maxPriorityFeePerGas?: BigNumberish;
+    maxFeePerGas?: BigNumberish;
+
+    customData?: Record<string, any>;
+    ccipReadEnabled?: boolean;
 }

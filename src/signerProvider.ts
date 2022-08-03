@@ -3,7 +3,7 @@ import {
   EIP1193Provider,
   ProviderAccounts,
   RequestArguments,
-  RpcInfo,
+  RpcInfo, TransactionRequest,
   WalletInfo
 } from './types'
 import { getHashMessage, SIGNING_METHODS } from './utils/rpc'
@@ -22,7 +22,8 @@ import { keccak256 } from '@ethersproject/keccak256'
 import { JsonRpcProvider } from '@ethersproject/providers'
 import { ec as EC } from 'elliptic'
 import { fetchRPC } from './utils/rpc'
-import { ethers } from 'ethers'
+
+// import { ethers } from 'ethers'
 
 
 export interface EIP712TypedDataField {
@@ -279,7 +280,7 @@ export class SignerProvider implements EIP1193Provider {
   }
 
   private parseTxParams = payload => {
-    let txParams: ethers.providers.TransactionRequest = {
+    let txParams: TransactionRequest = {
       from: payload.params[0].from,
       data: payload.params[0].data,
       chainId: this.chainId

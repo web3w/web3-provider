@@ -6,7 +6,7 @@ import {WalletProvider} from "../src/walletProvider";
 import secrets from '../../../secrets.json'
 import Web3 from "web3";
 import {ethers} from "ethers";
-import {WalletClient} from "../src/walletClient";
+import {WalletClient} from "./walletClient";
 import {CHAIN_CONFIG} from "../src/utils/chain";
 
 const account = privateKeyToAddress(secrets.privateKeys[0])
