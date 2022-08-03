@@ -22,7 +22,7 @@ export class WalletProvider implements EIP1193Provider {
   public accounts: string[] = []
   public chainId: number
   public walletName = 'wallet_connect'
-  public peerMetaName: string | undefined
+  public peerMetaName = ''
 
 
   private pending = false
@@ -36,7 +36,8 @@ export class WalletProvider implements EIP1193Provider {
     this.bridge = opts?.bridge || 'https://bridge.walletconnect.org'
     this.chainId = opts?.chainId || 1
     this.rpcs = rpcMap || chainRpcMap()
-    this.create()
+    this.wc = this.register(opts)
+    this.registerConnectorEvents()
   }
 
   get address() {
@@ -195,6 +196,7 @@ export class WalletProvider implements EIP1193Provider {
   }
 
   public async open(): Promise<void> {
+
     if (this.connected) {
       this.onOpen()
       return
@@ -258,23 +260,25 @@ export class WalletProvider implements EIP1193Provider {
 
   private create(): void {
     this.wc = this.register(this.opts)
-    this.registerConnectorEvents(this.wc)
     if (this.connected || this.pending) return
     this.pending = true
-    this.peerMetaName = this.wc.peerMeta?.name
     this.wc
       .createSession({ chainId: this.chainId })
       .then(() => this.events.emit('created'))
       .catch((e: Error) => this.events.emit('error', e))
   }
 
-  private registerConnectorEvents(wc: IConnector) {
+  private registerConnectorEvents() {
+    const wc = this.wc
+    if (!wc) return
+    this.peerMetaName = wc.peerMeta?.name || ''
     wc.on('connect', (err: Error | null, payload) => {
-      console.log('wc connect', payload)
+      console.log('wc connect', payload, wc.peerMeta)
       if (err) {
         this.events.emit('error', err)
         return
       }
+      this.peerMetaName = wc.peerMeta?.name || ''
       const { chainId, accounts } = payload.params[0]
       this.chainId = chainId
       this.accounts = accounts || []

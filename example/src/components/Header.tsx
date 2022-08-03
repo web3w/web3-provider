@@ -79,7 +79,7 @@ interface IHeaderProps {
 }
 
 const Header = (props: IHeaderProps) => {
-    const {connected, address, chainId, killSession} = props;
+    const {connected, address, chainId, killSession,provider} = props;
 
     const activeChain = chainId ? getChainData(chainId).name : null;
     return (
@@ -96,7 +96,7 @@ const Header = (props: IHeaderProps) => {
                 <SActiveAccount>
                     <SAddress connected={connected}>{ellipseAddress(address)}</SAddress>
                     <SDisconnect connected={connected} onClick={killSession}>
-                        {"Disconnect"}
+                        {"Disconnect"}({provider?.peerMetaName})
                     </SDisconnect>
                 </SActiveAccount>
             )}

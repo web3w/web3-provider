@@ -57,6 +57,7 @@ export class Web3App extends React.Component<any, any> {
       // create new session
       await provider.connect()
     }
+    debugger
     this.setState({ provider })
     // subscribe to events
     await this.subscribeToEvents(provider)
@@ -505,6 +506,7 @@ export class Web3App extends React.Component<any, any> {
 
   public render = () => {
     const {
+      provider,
       assets,
       address,
       connected,
@@ -518,6 +520,7 @@ export class Web3App extends React.Component<any, any> {
       <Layout>
         <Column maxWidth={1000} spanHeight>
           <Header
+            provider={provider}
             connected={connected}
             address={address}
             chainId={chainId}
@@ -528,7 +531,6 @@ export class Web3App extends React.Component<any, any> {
               <SLanding center>
                 <h1>
                   {`Try out Web3 WalletConnect v${pkg.version}`}
-
                 </h1>
                 <SButtonContainer>
                   <SConnectButton left onClick={this.connect} fetching={fetching}>
