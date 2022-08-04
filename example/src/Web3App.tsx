@@ -67,19 +67,14 @@ export class Web3App extends React.Component<any, any> {
     if (!provider) {
       return
     }
-    provider.on('chainChanged', async (error, payload) => {
-      console.log(`provider.on("chainChanged")`, payload)
-      if (error) {
-        throw error
-      }
-      const { chainId, accounts } = payload.params[0]
+    provider.on('chainChanged', async (chainId) => {
+      console.log(`provider.on("chainChanged")`, chainId)
       this.onSessionUpdate(provider)
     })
 
-    provider.on('accountsChanged', async (error, payload) => {
+    provider.on('accountsChanged', async (accounts) => {
       // setWallet(wallet)
-      console.log('wallet_connect accountsChanged Page', payload)
-      const { chainId, accounts } = payload.params[0]
+      console.log('wallet_connect accountsChanged Page', accounts)
       this.onSessionUpdate(provider)
 
     })
@@ -105,8 +100,6 @@ export class Web3App extends React.Component<any, any> {
 
     provider.on('error', (error, payload) => {
       console.log(`provider.on("error")`, error, payload)
-
-
     })
 
 

@@ -59,17 +59,17 @@ export class EthersApp extends React.Component<any, any> {
       return
     }
 
-    provider.on('chainChanged', async (error, payload) => {
-      console.log(`provider.on("chainChanged")`, payload)
+    provider.on('chainChanged', async (chainId) => {
+      console.log(`provider.on("chainChanged")`, chainId)
       if (error) {
         throw error
       }
       this.onSessionUpdate(provider)
     })
 
-    provider.on('accountsChanged', async (error, payload) => {
+    provider.on('accountsChanged', async (accounts) => {
       // setWallet(wallet)
-      console.log('wallet_connect accountsChanged Page', payload)
+      console.log('wallet_connect accountsChanged Page', accounts)
       this.onSessionUpdate(provider)
 
     })

@@ -23,9 +23,6 @@ import { JsonRpcProvider } from '@ethersproject/providers'
 import { ec as EC } from 'elliptic'
 import { fetchRPC } from './utils/rpc'
 
-// import { ethers } from 'ethers'
-
-
 export interface EIP712TypedDataField {
   name: string;
   type: string;

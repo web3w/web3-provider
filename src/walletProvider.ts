@@ -196,14 +196,15 @@ export class WalletProvider implements EIP1193Provider {
   }
 
   public async open(): Promise<void> {
-
     if (this.connected) {
       this.onOpen()
       return
     }
     return new Promise((resolve, reject): void => {
-      this.on('error', err => {
-        reject(err)
+      this.on('message', err => {
+        if (err.type == 'error') {
+          reject(err)
+        }
       })
 
       this.on('open', () => {
@@ -275,7 +276,7 @@ export class WalletProvider implements EIP1193Provider {
     wc.on('connect', (err: Error | null, payload) => {
       console.log('wc connect', payload, wc.peerMeta)
       if (err) {
-        this.events.emit('error', err)
+        this.events.emit('message', { type: 'error', data: err })
         return
       }
       this.peerMetaName = wc.peerMeta?.name || ''
@@ -289,7 +290,7 @@ export class WalletProvider implements EIP1193Provider {
     wc.on('disconnect', (err: Error | null) => {
       console.log('wc disconnect')
       if (err) {
-        this.events.emit('error', err)
+        this.events.emit('message', { type: 'error', data: err })
         return
       }
       this.events.emit('disconnect')
@@ -297,21 +298,22 @@ export class WalletProvider implements EIP1193Provider {
     })
 
     wc.on('modal_closed', () => {
-      console.log('wc modal_closed')
-      this.events.emit('error', 'User closed modal')
+      this.events.emit('message', { type: 'error', data: 'User closed modal' })
     })
 
     wc.on('session_update', (error, payload) => {
       console.log('wc session_update', { error, payload })
+      this.events.emit('session_update', error, payload)
       const { accounts, chainId } = payload.params[0]
       if (!this.accounts || (accounts && this.accounts[0].toLowerCase() !== accounts[0].toLowerCase())) {
         this.accounts = accounts
-        this.events.emit('accountsChanged', error, payload)
+        this.events.emit('accountsChanged', accounts)
       }
       if (!this.chainId || (chainId && this.chainId !== chainId)) {
         this.chainId = chainId
-        this.events.emit('chainChanged', error, payload)
+        this.events.emit('chainChanged', chainId)
       }
+
     })
   }
 }
