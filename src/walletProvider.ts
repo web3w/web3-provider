@@ -311,7 +311,7 @@ export class WalletProvider implements EIP1193Provider {
       }
       if (!this.chainId || (chainId && this.chainId !== chainId)) {
         this.chainId = chainId
-        this.events.emit('chainChanged', chainId)
+        this.events.emit('chainChanged', `0x${chainId.toString(16)}`)
       }
 
     })
