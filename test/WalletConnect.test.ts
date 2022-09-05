@@ -1,152 +1,153 @@
 // import {WalletConnectProvider} from "../src/wallet-connect-provider/index";
-import WalletConnect from "@walletconnect/client";
-import {privateKeyToAddress, SignerProvider} from "../src/signerProvider";
+import WalletConnect from '@walletconnect/client'
+import { privateKeyToAddress, SignerProvider } from '../src/signerProvider'
 import secrets from '../../../secrets.json'
-import {WalletProvider} from "../src/walletProvider";
-import {ethers} from "ethers";
-import {isValidAddress, parseTransactionData} from "@walletconnect/utils";
+
+import { isValidAddress, parseTransactionData } from '@walletconnect/utils'
 
 const account = privateKeyToAddress(secrets.privateKeys[0])
 
-const signer = new SignerProvider({chainId: 4, privateKeys: secrets.privateKeys})
+const signer = new SignerProvider({ chainId: 4, address: account, privateKeys: secrets.privateKeys })
 
 
 // const foo = parseTransactionData()
-//
-const foo1 = isValidAddress("0xeA199722372dea9DF458dbb56be7721af117a9Bc")
-console.log(foo1)
+// const foo1 = isValidAddress(account)
+// console.log(foo1)
+
 const tx1 = {
-        "chainId": "0x4",
-        "gas": "0x5208",
-        "type": "0x2",
-        "maxFeePerGas": "0x649534e00",
-        "maxPriorityFeePerGas": "0x649534e00",
-        "nonce": "0x2ea",
-        "value": "0x0",
-        "from": account,
-        "to": "0x32f4b63a46c1d12ad82cabc778d75abf9889821a",
-        "data": "0x"
-    }
+  'chainId': '0x4',
+  'gas': '0x5208',
+  'type': '0x2',
+  'maxFeePerGas': '0x649534e00',
+  'maxPriorityFeePerGas': '0x649534e00',
+  'nonce': '0x2ea',
+  'value': '0x0',
+  'from': account,
+  'to': '0x32f4b63a46c1d12ad82cabc778d75abf9889821a',
+  'data': '0x'
+}
 
 const tx = {
-        "from": account,
-        "to": "0x32f4B63A46c1D12AD82cABC778D75aBF9889821a",
-        "gasPrice": "0x0649534e00",
-        "gasLimit": "0x5208",
-        "value": "0x00",
-        "data": "0x"
-    }
+  'from': account,
+  'to': '0x32f4B63A46c1D12AD82cABC778D75aBF9889821a',
+  'gasPrice': '0x0649534e00',
+  'gasLimit': '0x5208',
+  'value': '0x00',
+  'data': '0x'
+}
 
 const foo11 = parseTransactionData({
-    from: "0xeA199722372dea9DF458dbb56be7721af117a9Bc",
-    gasPrice: "20000000000",
-    to: "0xeA199722372dea9DF458dbb56be7721af117a9Bc",
-    gas: "21000",
-    value: "1"
+  from: account,
+  gasPrice: '20000000000',
+  to: '0xeA199722372dea9DF458dbb56be7721af117a9Bc',
+  gas: '21000',
+  value: '1'
 })
-    console.log(foo11)
+
+console.log(foo11)
 
 ;(async () => {
 
-    const account = "0x0A56b3317eD60dC4E1027A63ffbE9df6fb102401"
-    const bridge = "https://bridge.walletconnect.org"
-    // Create a connector
-    const pageClient = new WalletConnect({
-        bridge, // Requireda
-    });
-    //createSession 生产 uri
-    await pageClient.createSession();
+  // const account = "0x0A56b3317eD60dC4E1027A63ffbE9df6fb102401"
+  const bridge = 'https://bridge.walletconnect.org'
+  // const bridge = 'https://element-api.eossql.com/bridge/walletconnect'
+  // Create a connector
+  const pageClient = new WalletConnect({
+    bridge // Requireda
+  })
+  //createSession 生产 uri
+  await pageClient.createSession()
 
-    pageClient.on("connect", async (val, e) => {
-        // console.log("connect1", val, e)
-        console.log("1.3 PageClient connect ", pageClient.connected, "SignMessage")
+  pageClient.on('connect', async (val, e) => {
+    // console.log("connect1", val, e)
+    console.log('1.3 PageClient connect ', pageClient.connected, 'SignMessage')
 
-        const message = "My email is john@doe.com - 1537836206101";
+    const message = 'My email is john@doe.com - 1537836206101'
 
-        const msgParams = [
-            account,                            // Required
-            message    // Required
-        ];
+    const msgParams = [
+      account,                            // Required
+      message    // Required
+    ]
 
-        console.log("2.1 PageClient SignMessage")
+    console.log('2.1 PageClient SignMessage')
 
-        // const ethSigner = new ethers.providers.Web3Provider(signer).getSigner()
-        // const txx = await ethSigner.populateTransaction(tx)
-        // ethSigner.sendTransaction(txx).then(result => {
-        //     console.log("2.4 PageClient receive tx signature", result)
-        // })
+    // const ethSigner = new ethers.providers.Web3Provider(signer).getSigner()
+    // const txx = await ethSigner.populateTransaction(tx)
+    // ethSigner.sendTransaction(txx).then(result => {
+    //     console.log("2.4 PageClient receive tx signature", result)
+    // })
 
-        // 发起一个 签名请求
-        pageClient.signMessage(msgParams)
-            .then((result) => {
-                // Returns signature.
-                console.log("2.3 PageClient receive signature", result)
-                console.log(result)
-            })
-            .catch(error => {
-                // Error returned when rejected
-                console.error(error);
-            })
+    // 发起一个 签名请求
+    pageClient.signMessage(msgParams)
+      .then((result) => {
+        // Returns signature.
+        console.log('2.3 PageClient receive signature', result)
+        console.log(result)
+      })
+      .catch(error => {
+        // Error returned when rejected
+        console.error(error)
+      })
 
-        pageClient.signTransaction(tx)
-            .then((result) => {
-                console.log("2.4 PageClient receive tx signature", result)
-            })
-            .catch(error => {
-                console.error(error);
-            })
+    pageClient.signTransaction(tx)
+      .then((result) => {
+        console.log('2.4 PageClient receive tx signature', result)
+      })
+      .catch(error => {
+        console.error(error)
+      })
+
+  })
+
+  pageClient.on('disconnect', (val, e) => {
+    // console.log("disconnect1", val, e)
+    console.log('pageClient disconnect event', pageClient.connected)
+
+  })
+  //
+  const mobileClient = new WalletConnect({
+    bridge,
+    uri: pageClient.uri
+  })
+  if (!mobileClient.connected) {
+    mobileClient.on('session_request', async (val, e) => {
+      console.log('1.1 WalletClient event: session_request Approve session')
+      mobileClient.approveSession({ chainId: 4, accounts: [account] })
+    })
+
+    mobileClient.on('session_update', (val, e) => {
+      console.log('mobileClient:session_update')
+      // console.log("session_request", val, e)
+      // console.log("session_request", mobileClient)
+      // mobileClient.approveSession({chainId: 1, accounts: [account]});
+    })
+
+    mobileClient.on('call_request', async (n, e) => {
+      console.log('WalletClient event call_request', e)
+
+      const res = await signer.request(e)
+      console.log('2.2 WalletClient SignMessage', res)
+      mobileClient.approveRequest({
+        id: e.id,
+        jsonrpc: e.jsonrpc,
+        result: res
+      })
 
     })
 
-    pageClient.on("disconnect", (val, e) => {
-        // console.log("disconnect1", val, e)
-        console.log("pageClient disconnect event", pageClient.connected)
-
+    mobileClient.on('connect', (val, e) => {
+      // console.log("connect2", val)
+      // console.log("connect2 event",e)
+      console.log('1.2 WalletClient event:connect', mobileClient.connected)
+      // mobileClient.killSession()
     })
-    //
-    const mobileClient = new WalletConnect({
-        bridge,
-        uri: pageClient.uri
+
+    mobileClient.on('disconnect', function(n, e) {
+      console.log('mobileClient disconnect event')
     })
-    if (!mobileClient.connected) {
-        mobileClient.on("session_request", async (val, e) => {
-            console.log("1.1 WalletClient event: session_request Approve session")
-            mobileClient.approveSession({chainId: 4, accounts: [account]});
-        })
-
-        mobileClient.on("session_update", (val, e) => {
-            console.log("mobileClient:session_update")
-            // console.log("session_request", val, e)
-            // console.log("session_request", mobileClient)
-            // mobileClient.approveSession({chainId: 1, accounts: [account]});
-        })
-
-        mobileClient.on("call_request", async (n, e) => {
-            console.log("WalletClient event call_request", e.id)
-
-            const res = await signer.request(e)
-            console.log("2.2 WalletClient SignMessage", res)
-            mobileClient.approveRequest({
-                id: e.id,
-                jsonrpc: e.jsonrpc,
-                result: res
-            })
-
-        })
-
-        mobileClient.on("connect", (val, e) => {
-            // console.log("connect2", val)
-            // console.log("connect2 event",e)
-            console.log("1.2 WalletClient event:connect", mobileClient.connected)
-            // mobileClient.killSession()
-        })
-
-        mobileClient.on("disconnect", function (n, e) {
-            console.log("mobileClient disconnect event")
-        })
-        // await mobileClient.createSession();
-    }
-    console.log("mobileClient Start");
+    // await mobileClient.createSession();
+  }
+  console.log('mobileClient Start')
 
 })()
 

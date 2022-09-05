@@ -4,8 +4,6 @@ import {privateKeyToAddress, SignerProvider} from "../src/signerProvider";
 
 import {WalletProvider} from "../src/walletProvider";
 import secrets from '../../../secrets.json'
-import Web3 from "web3";
-import {ethers} from "ethers";
 import {WalletClient} from "./walletClient";
 import {CHAIN_CONFIG} from "../src/utils/chain";
 

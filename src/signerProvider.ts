@@ -144,14 +144,26 @@ export class SignerProvider implements EIP1193Provider {
     this.rpcInfo = wallet?.rpcUrl || { url: chainRpcMap()[this.chainId] }
     this.accountsPriKey = privateKeysToAddress(wallet?.privateKeys || [prikey])
     this.accounts = Object.keys(this.accountsPriKey)
-    const defaultPriKey = wallet?.address
+    let defaultPriKey = wallet?.address
       ? this.accountsPriKey[wallet?.address.toLowerCase()]
       : prikey
-    if (!defaultPriKey) throw new Error('The private key does not match the address')
+    if (!defaultPriKey) {
+      defaultPriKey = prikey
+      console.warn('The private key does not match the address')
+    }
     this.signer = this.getWallet(defaultPriKey)
+
+    // const {chainId, address, accounts} = walletProvider
+    // if (accounts) {
+    //     if (!accounts.find(val => val == address.toLowerCase())) throw 'PriKey error'
+    // }
   }
 
   get address() {
+    return this.signer.address || this.accounts[0]
+  }
+
+  public getAddress() {
     return this.signer.address || this.accounts[0]
   }
 

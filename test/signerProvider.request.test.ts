@@ -7,12 +7,9 @@ import {Wallet} from "@ethersproject/wallet"
 
 const accounts = privateKeysToAddress(secrets.privateKeys)
 const account = privateKeyToAddress(secrets.privateKeys[0])
+//
 
-const ww = ethers.Wallet.createRandom()
-
-console.log(ww.privateKey)
-
-const signer = new SignerProvider({chainId: 4})
+const signer = new SignerProvider({chainId: 4,privateKeys:secrets.privateKeys,address:"0x0A56b3317eD60dC4E1027A63ffbE9df6fb102401"})
 
 ;(async () => {
 
